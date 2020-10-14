@@ -1,9 +1,9 @@
-/* #include "Tracker.h"
+#include "Tracker.h"
 
 namespace VITAMINE
 {
 
-    void Tracker::track()
+    /* void Tracker::track()
     {
                 Mat gray;
         cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
@@ -98,6 +98,15 @@ namespace VITAMINE
                 break
             iter += 1
         }
+    } */
+
+    void Tracker::SetMapper(Mapper *pMapper)
+    {
+        mpMapper=pMapper;
     }
 
-} */
+    void Tracker::SetViewer(Viewer *pViewer)
+    {
+        mpViewer=pViewer;
+    }
+}

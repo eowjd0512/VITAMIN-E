@@ -17,14 +17,15 @@ int main(int argc, char **argv)
   
     bool visualizer = true;
     VITAMINE::System vitamine(argv[1], visualizer);
-     
+     cout<<"6"<<endl;
     Mat frame; 
     while(true)  
     {  
-        
-        cap >> frame;  
+        cout<<"7"<<endl;
+        cap >> frame; 
+        cout<<"8"<<endl; 
         vitamine.track(frame);
-
+        cout<<"9"<<endl;
     }  
     
     vitamine.Shutdown();

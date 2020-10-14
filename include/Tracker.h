@@ -1,31 +1,63 @@
-/* #ifndef TRACKER_H
+#ifndef TRACKER_H
 #define TRACKER_H
 #include<unistd.h>
 #include<string>
 #include<thread>
 #include "opencv2/opencv.hpp"
 
+#include"Viewer.h"
+#include"FrameDrawer.h"
+#include"Map.h"
+#include"Mapper.h"
+#include "MapDrawer.h"
+#include "System.h"
+
+#include <mutex>
+using namespace std;
 
 namespace VITAMINE{
 
-    class Tracker{
-        
-    public:
-        Tracker{}; //default constructor
-        Tracker{const Tracker& rhs}; //copy constructor
-        ~Tracker{}; //destructor 
-        //TODO: smart pointer
+class Viewer;
+class FrameDrawer;
+class Map;
+class Mapper;
+class System;
 
-        Tracker& operator=(const Tracker& rhs()){};//copy assignment operator
+class Tracker{
+    
+public:
+    Tracker(System* pSys, FrameDrawer* pFrameDrawer, MapDrawer* pMapDrawer,
+                            Map* pMap, const string &strSettingPath){}; //default constructor
+    Tracker(const Tracker& rhs){}; //copy constructor
+    ~Tracker(){}; //destructor 
+    //TODO: smart pointer
 
-        const void tracking();
+    Tracker& operator=(const Tracker& rhs()){};//copy assignment operator
 
-    private:
-    //cv::Mat
+    // Preprocess the input and call Track(). Extract features and performs matching.
+    const void tracking();
 
-    };
+    void SetMapper(Mapper* pMapper);
+    void SetViewer(Viewer *pViewer);
+
+private:
+    //Other Thread Pointers
+    Mapper* mpMapper;
+
+    // System
+    System* mpSystem;
+
+    //Drawers
+    Viewer* mpViewer;
+    FrameDrawer* mpFrameDrawer;
+    MapDrawer* mpMapDrawer;
+
+    //Map
+    Map* mpMap;
+
+    
+};
 
 }//namespace VITAMINE
 
 #endif // TRACKER_H
- */

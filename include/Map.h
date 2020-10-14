@@ -8,18 +8,18 @@
 
 namespace VITAMINE{
 
-    class Map{
-        
-    public:
-        Map(){}; //default constructor
-        Map(const Map& rhs){}; //copy constructor
-        ~Map(){}; //destructor 
-        //TODO: smart pointer
+class Map{
+    
+public:
+    Map(){}; //default constructor
+    Map(const Map& rhs){}; //copy constructor
+    ~Map(){}; //destructor 
+    //TODO: smart pointer
 
-    private:
-    //cv::Mat
+private:
+//cv::Mat
 
-    };
+};
 
 }//namespace VITAMINE
 

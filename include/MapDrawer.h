@@ -4,14 +4,18 @@
 #include<string>
 #include<thread>
 #include "opencv2/opencv.hpp"
-
+#include<pangolin/pangolin.h>
+using namespace std;
 
 namespace VITAMINE{
 
     class MapDrawer{
         
     public:
-        MapDrawer(){}; //default constructor
+        MapDrawer(Map* pMap, const string &strSettingPath){}; //default constructor
+
+        Map* mpMap;
+
         MapDrawer(const MapDrawer& rhs){}; //copy constructor
         ~MapDrawer(){}; //destructor 
         //TODO: smart pointer
