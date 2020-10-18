@@ -12,6 +12,7 @@
 #include "Map.h"
 #include "MapDrawer.h"
 #include "FrameDrawer.h"
+#include "MapPoint.h"
 
 using namespace std;
 
@@ -31,8 +32,12 @@ public:
     //~System{}; //destructor 
     //TODO: smart pointer
 
-    cv::Mat track(const cv::Mat &frame);
+    cv::Mat Track(const cv::Mat &im);
     void Shutdown();
+
+
+    std::vector<MapPoint*> mTrackedMapPoints;
+    std::vector<cv::KeyPoint> mTrackedKeyPointsUn;
 
 private:
 

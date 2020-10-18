@@ -1,4 +1,4 @@
-#include "MapDrawer.h"
+#include "FeatureExtractor.h"
 
 namespace VITAMINE
 {

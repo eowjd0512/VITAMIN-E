@@ -1,4 +1,4 @@
-#include "MapDrawer.h"
+#include "Initializer.h"
 
 namespace VITAMINE
 {

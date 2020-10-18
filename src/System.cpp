@@ -4,6 +4,7 @@ namespace VITAMINE
 {
 
     System::System(const string &strSettingsFile, const bool bUseViewer)
+    :mpViewer(static_cast<Viewer*>(NULL)), mbReset(false)
     {
         // Output welcome message
         /* cout << endl <<
@@ -19,7 +20,7 @@ namespace VITAMINE
         cerr << "Failed to open settings file at: " << strSettingsFile << endl;
         exit(-1);
         }
-        cout<<"1"<<endl;
+
         //Create the Map
         mpMap = new Map();
 
@@ -27,7 +28,7 @@ namespace VITAMINE
         mpMapDrawer = new MapDrawer(mpMap, strSettingsFile); 
         mpFrameDrawer = new FrameDrawer(mpMap); 
         
-        cout<<"2"<<endl;
+
         //Initialize the Tracking thread
         //(it will live in the main thread of execution, the one that called this constructor)
         mpTracker = new Tracker(this, mpFrameDrawer, mpMapDrawer,
@@ -36,7 +37,7 @@ namespace VITAMINE
         //Initialize the Local Mapping thread and launch
         mpMapper = new Mapper(mpMap);
         mptMapping = new thread(&Mapper::Run,mpMapper);
-        cout<<"3"<<endl;
+
         //Initialize the Viewer thread and launch
         if(bUseViewer)
         {
@@ -44,15 +45,35 @@ namespace VITAMINE
             mptViewer = new thread(&Viewer::Run, mpViewer);
             mpTracker->SetViewer(mpViewer);
         }
-        cout<<"4"<<endl;
+
         //Set pointers between threads
         mpTracker->SetMapper(mpMapper);
         mpMapper->SetTracker(mpTracker);
-        cout<<"5"<<endl;
+
     }       
 
-    cv::Mat System::track(const cv::Mat &frame){
+    cv::Mat System::Track(const cv::Mat &im){
         //TODO: call the tracker
+
+        // Check reset
+        {
+        unique_lock<mutex> lock(mMutexReset);
+        if(mbReset)
+        {
+            mpTracker->Reset();
+            mbReset = false;
+        }
+        }
+
+        cv::Mat Tcw = mpTracker->GrabImageMonocular(im);
+
+        unique_lock<mutex> lock2(mMutexState);
+        mTrackingState = mpTracker->mState;
+        mTrackedMapPoints = mpTracker->mCurrentFrame.mvpMapPoints;
+        mTrackedKeyPointsUn = mpTracker->mCurrentFrame.mvKeysUn;
+
+        return Tcw;
+
     }
     void System::Shutdown(){
 

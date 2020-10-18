@@ -20,9 +20,11 @@ include_directories(
     add_library(${PROJECT_NAME} SHARED
     src/Frame.cpp
     src/FrameDrawer.cpp
+    src/Initializer.cpp
     src/Map.cpp
     src/MapDrawer.cpp
     src/Mapper.cpp
+    src/MapPoint.cpp
     src/Matcher.cpp
     src/Optimizer.cpp
     src/System.cpp

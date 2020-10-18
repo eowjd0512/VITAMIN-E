@@ -3,23 +3,91 @@
 #include<unistd.h>
 #include<string>
 #include<thread>
+#include<vector>
 #include "opencv2/opencv.hpp"
-
+#include "FeatureExtractor.h"
+#include "MapPoint.h"
+using namespace std;
 
 namespace VITAMINE{
 
-    class Frame{
-        
-    public:
-        Frame(){}; //default constructor
-        Frame(const Frame& rhs){}; //copy constructor
-        ~Frame(){}; //destructor 
-        //TODO: smart pointer
+class MapPoint;
 
-    private:
-    //cv::Mat
+class Frame{
+    
+public:
+    Frame(){};
+    // Constructor for Monocular cameras.
+    Frame(const cv::Mat &imGray, FeatureExtractor* extractor,cv::Mat &K, cv::Mat &distCoef);
 
-    };
+
+    Frame(const Frame& rhs){}; //copy constructor
+    ~Frame(){}; //destructor 
+    //TODO: smart pointer
+
+public:
+    // Feature extractor. The right is used only in the stereo case.
+    FeatureExtractor* mpFeatureExtractor;
+
+    // Frame timestamp.
+    double mTimeStamp;
+
+    // Calibration matrix and OpenCV distortion parameters.
+    cv::Mat mK;
+    static float fx;
+    static float fy;
+    static float cx;
+    static float cy;
+    static float invfx;
+    static float invfy;
+    cv::Mat mDistCoef;
+
+    // Number of KeyPoints.
+    int N;
+
+    // Vector of keypoints (original for visualization) and undistorted (actually used by the system).
+    // In the stereo case, mvKeysUn is redundant as images must be rectified.
+    // In the RGB-D case, RGB images can be distorted.
+    std::vector<cv::KeyPoint> mvKeys;
+    std::vector<cv::KeyPoint> mvKeysUn;
+
+    // MapPoints associated to keypoints, NULL pointer if no association.
+    std::vector<MapPoint*> mvpMapPoints;
+
+    // Flag to identify outlier associations.
+    std::vector<bool> mvbOutlier;
+
+    // Camera pose.
+    cv::Mat mTcw;
+
+    // Current and Next Frame id.
+    static long unsigned int nNextId;
+    long unsigned int mnId;
+
+    // Undistorted Image Bounds (computed once).
+    static float mnMinX;
+    static float mnMaxX;
+    static float mnMinY;
+    static float mnMaxY;
+
+    static bool mbInitialComputations;
+
+
+protected:
+    // Undistort keypoints given OpenCV distortion parameters.
+    // Only for the RGB-D case. Stereo must be already rectified!
+    // (called in the constructor).
+    void UndistortKeyPoints();
+
+    // Computes image bounds for the undistorted image (called in the constructor).
+    void ComputeImageBounds(const cv::Mat &im);
+
+    // Rotation, translation and camera center
+    cv::Mat mRcw;
+    cv::Mat mtcw;
+    cv::Mat mRwc;
+    cv::Mat mOw; //==mtwc
+};
 
 }//namespace VITAMINE
 

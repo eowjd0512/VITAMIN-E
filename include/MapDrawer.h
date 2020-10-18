@@ -5,6 +5,8 @@
 #include<thread>
 #include "opencv2/opencv.hpp"
 #include<pangolin/pangolin.h>
+#include"Map.h"
+
 using namespace std;
 
 namespace VITAMINE{
