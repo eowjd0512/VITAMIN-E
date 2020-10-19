@@ -9,7 +9,7 @@ using namespace std;
 int main(int argc, char **argv)  
 {  
 
-    VideoCapture cap(0);  
+    VideoCapture cap(1);  
     if (!cap.isOpened())  
     {  
         cerr<<"cam open error"<<endl;  

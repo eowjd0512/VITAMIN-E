@@ -18,6 +18,7 @@ include_directories(
     )
 
     add_library(${PROJECT_NAME} SHARED
+    src/FeatureExtractor.cpp
     src/Frame.cpp
     src/FrameDrawer.cpp
     src/Initializer.cpp

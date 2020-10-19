@@ -25,7 +25,7 @@ Frame::Frame(const cv::Mat &imGray, FeatureExtractor* extractor, cv::Mat &K, cv:
 
     // Feature extraction
     ExtractFeature(imGray);
-
+    
     N = mvKeys.size();
 
     if(mvKeys.empty())
@@ -56,17 +56,12 @@ Frame::Frame(const cv::Mat &imGray, FeatureExtractor* extractor, cv::Mat &K, cv:
 
     //AssignFeaturesToGrid();
 
-    //TODO: goto feature extractor?
-    /* kappa = curvature(img/255.0)
-            
-    kappa = np.linalg.norm(kappa, axis=-1)
-
-    maxima, idx = local_maxima(kappa) */
+    
 
 }
 void Frame::ExtractFeature(const cv::Mat &im)
 {
-    (*mpFeatureExtractor)(im,cv::Mat(),mvKeys,mDescriptors);
+    mpFeatureExtractor->detect(im, mvKeys, mDescriptors);
 }
 
 void Frame::UndistortKeyPoints()

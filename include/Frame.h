@@ -23,7 +23,9 @@ public:
 
     Frame(const Frame& rhs){}; //copy constructor
     ~Frame(){}; //destructor 
-    //TODO: smart pointer
+    
+    // Extract features on the image. 
+    void ExtractFeature(const cv::Mat &im);
 
 public:
     // Feature extractor. The right is used only in the stereo case.
@@ -50,6 +52,9 @@ public:
     // In the RGB-D case, RGB images can be distorted.
     std::vector<cv::KeyPoint> mvKeys;
     std::vector<cv::KeyPoint> mvKeysUn;
+
+    // Brief descriptor, each row associated to a keypoint.
+    Mat mDescriptors;
 
     // MapPoints associated to keypoints, NULL pointer if no association.
     std::vector<MapPoint*> mvpMapPoints;

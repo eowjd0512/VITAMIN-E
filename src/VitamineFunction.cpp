@@ -31,33 +31,7 @@ namespace VITAMINE{
         return pt1, good
     }
 
-    const void VitaminFunction::curvature(){
-        dfun = cv2.Sobel
-        farg = dict(
-                ddepth=cv2.CV_64F,
-                ksize=5
-                )
-        #img = img / 255.0 # normalize to 0-1
-
-        fx = dfun(img, dx=1, dy=0, **farg)
-        fy = dfun(img, dx=0, dy=1, **farg)
-        fxx = dfun(img, dx=2, dy=0, **farg)
-        fyy = dfun(img, dx=0, dy=2, **farg)
-        fxy = dfun(img, dx=1, dy=1, **farg)
-
-        #fx, fy = dx(img), dy(img)
-        #fxx, fyy = dx(img, 2), dy(img, 2)
-        #fxy = dy(fx)
-
-        #fx = dfun(img, cv2.CV_64F, 1, 0)
-        #fy = dfun(img, cv2.CV_64F, 0, 1)
-        #fxx = dfun(img, cv2.CV_64F, 2, 0)
-        #fyy = dfun(img, cv2.CV_64F, 0, 2)
-        #fxy = dfun(img, cv2.CV_64F, 1, 1)
-
-        k = (fy*fy*fxx - 2*fx*fy*fxy + fx*fx*fyy)
-        return k
-    }
+    
     const void VitaminFunction::p_fn(){
         # really should be `rho`, but using p anyway
         # Geman-McClure Kernel
@@ -68,37 +42,7 @@ namespace VITAMINE{
     const void VitaminFunction::w_fn(){
         return 1.0 - p_fn(x, sigma=sigma)
     }
-    const void VitaminFunction::local_maxima(){
-        # curvature
-        #img = np.square(img).sum(axis=-1)
-        #img = np.linalg.norm(img, axis=-1)
-        
-        ker = cv2.getStructuringElement(
-                cv2.MORPH_RECT, (wsize,wsize) )
-        imx = cv2.dilate(img, ker)
-
-        msk = (img >= imx)
-
-        if no_flat:
-            e_img = cv2.erode(img, ker)
-            flat_msk = (img > e_img)
-            msk = np.logical_and(msk, flat_msk)
-
-        if thresh:
-            val_msk = (img > np.percentile(img, 95.0))
-            msk = np.logical_and(msk, val_msk)
-
-        idx = np.stack(np.nonzero(msk), axis=-1)
-
-        return msk[...,None].astype(np.float32), idx
-        print ('numex', np.sum(msk))
-        #return res[..., None]
-
-        #res = np.zeros_like(im)
-        #np.copyto(res, im, where=(img >= imx))
-        #return res
-        #return img * (img >= imx).astype(np.uint8)
-    }
+    
     const void VitaminFunction::get_dominant_motion(){
         pt0, pt1, m01 = mdata
         i0, i1 = np.stack([(m.queryIdx, m.trainIdx) for m in m01], axis=1)
