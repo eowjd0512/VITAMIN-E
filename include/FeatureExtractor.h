@@ -34,7 +34,7 @@ public:
 private:
 
     Mat curvature(Mat src);
-    void local_maxima(Mat img, vector<KeyPoint>& keypoints, int neighbor=2);
+    void local_maxima(Mat img, vector<KeyPoint>& keypoints, int neighbor=5);
 
     Ptr<BriefDescriptorExtractor> extractor;
 };

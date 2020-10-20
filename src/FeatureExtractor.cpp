@@ -7,8 +7,8 @@ namespace VITAMINE
         const int scale = 1;
         const int delta = 0;
         const int ddepth = CV_8U; //CV_64F
-        const int ksize = 1; //5
- 
+        const int ksize = 1;
+        
         Mat fx, fy, fxx, fyy, fxy;
         cv::Sobel( src, fx, ddepth, 1, 0, ksize, scale, delta, BORDER_DEFAULT );
         cv::Sobel( src, fy, ddepth, 0, 1, ksize, scale, delta, BORDER_DEFAULT );
@@ -17,55 +17,83 @@ namespace VITAMINE
         cv::Sobel( src, fxy, ddepth, 1, 1, ksize, scale, delta, BORDER_DEFAULT );
  
         Mat k = (fy.mul(fy)).mul(fxx) - 2*(fx.mul(fy)).mul(fxy) + (fx.mul(fx)).mul(fyy);
-
+        //cout<<sqrt(sum(k.mul(k))[0])<<endl;
+        //k /= sqrt(sum(k.mul(k))[0]); //l2norm
+        GaussianBlur(k, k, Size(3, 3), 0, 0, BORDER_DEFAULT);
+        //double min, max;
+        //minMaxIdx(k, &min, &max);
+        //normalize(k, k, 0, 1, NORM_MINMAX);
+        
         return k;
     }
+    size_t percentile(const Mat& img, float percent){
+        // calculate histogram for every pixel value (i.e [0 - 255])
+        cv::Mat hist;
+        int histSize = 255;
+        float range[] = { 1, 256 } ;
+        const float* histRange = { range };
+        bool uniform = true; bool accumulate = false;
+        cv::calcHist( &img, 1, 0, cv::Mat(), hist, 1, &histSize, &histRange, uniform, accumulate );
 
-    vector<Point> bhContoursCenter(const vector<vector<Point>>& contours, vector<KeyPoint>& keypoints, bool centerOfMass,int contourIdx=-1){
- 
-        if (contourIdx > -1){
-            if (centerOfMass){
-                Moments m = moments(contours[contourIdx],true);
-                keypoints.push_back( KeyPoint(m.m10/m.m00, m.m01/m.m00, 1));
-            }else{
-                Rect rct = boundingRect(contours[contourIdx]);
-                keypoints.push_back( KeyPoint(rct.x + rct.width / 2 ,rct.y + rct.height / 2, 1));
-            }
-        }else{
-            if (centerOfMass){
-                for (int i=0; i < contours.size();i++){
-                    Moments m = moments(contours[i],true);
-                    keypoints.push_back( KeyPoint(m.m10/m.m00, m.m01/m.m00, 1));
+        // total pixels in image
+        float totalPixels =  countNonZero(img);
 
-                }
-            }else{
-                for (int i=0; i < contours.size(); i++){
-                    Rect rct = boundingRect(contours[i]);
-                    keypoints.push_back(KeyPoint(rct.x + rct.width / 2 ,rct.y + rct.height / 2, 1));
-                }
-            }
+        // calculate percentage of every histogram bin (i.e: pixel value [0 - 255])
+        // the 'bins' variable holds pairs of (int pixelValue, float percentage) 
+        std::vector<std::pair<int, float>> bins;
+        float percentage;
+        for(int i = 0; i < 255; ++i)
+        {
+            percentage = (hist.at<float>(i,0)*100.0)/totalPixels;
+            bins.push_back(std::make_pair(i, percentage));
         }
-    }
 
+        // sort the bins according to percentage
+        sort(bins.begin(), bins.end());
+
+        // compute percentile for a pixel value
+        int pixel = 0;
+        float sum = 0;
+
+        for (auto b : bins){
+            sum += b.second;
+            if (sum >= percent){
+                pixel = b.first;
+                break;
+            }
+  
+        }
+
+        //std::cout<<"Percentile for pixel("<<pixel+1<<"): "<<percent<<std::endl;
+        return pixel+1;
+    }
     void FeatureExtractor::local_maxima(Mat img, vector<KeyPoint>& keypoints, int neighbor){
         //TODO: adjust using ED algorithm
-        /* int wsize = 9;
+        int wsize = 9;
         Mat ker = getStructuringElement(cv::MORPH_RECT, cv::Size(wsize, wsize));
         
         Mat imx;
         dilate(img, imx, ker);
-
+        
         Mat msk = (img >= imx);
-
+        
         Mat e_img;
         erode(img, e_img, ker);
-        Mat flat_msk = (img > e_img);
-        bitwise_and(msk,flat_msk,msk);
 
-        Mat val_msk = (img > np.percentile(img, 95.0));
+        Mat flat_msk = (img > e_img);
+
+        bitwise_and(msk,flat_msk,msk);
+        
+        Mat val_msk = (img >= percentile(img, 95.0));
         bitwise_and(msk, val_msk, msk);
         
-        idx = np.stack(np.nonzero(msk), axis=-1)
+        imshow("img", img);
+        imshow("imx", imx);
+        imshow("e_img", e_img);
+        imshow("msk", msk);
+        waitKey(30);
+        cout<<countNonZero(msk)<<endl;
+        /* idx = np.stack(np.nonzero(msk), axis=-1)
         return msk[...,None].astype(np.float32), idx */
     }
 
