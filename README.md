@@ -12,6 +12,7 @@ Re-implementation of VITAMIN-E SLAM
 This project was started to re-produce the paper
 
 "M. Yokozuka et al, VITAMIN-E: VIsual Tracking And MappINg with Extremely Dense Feature Points, CVPR 2019"
+<https://arxiv.org/pdf/1904.10324.pdf>
 
 ## Requirements
 
@@ -25,7 +26,12 @@ This project was started to re-produce the paper
 
 ### Progress
 
-Implementing the architecture...
+[Done]
+- Architecture construction
+- Local extrema feature extraction and curvature tracking
+
+[TODO]
+- Implementation of Subspace Gauss-Newton Method
 
 ### Architecture
 

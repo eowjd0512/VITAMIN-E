@@ -1,4 +1,5 @@
 #include "Tracker.h"
+#include <chrono>
 
 namespace VITAMINE
 {
@@ -276,8 +277,13 @@ namespace VITAMINE
         waitKey(30); */
         
         vitaFunc->loadConsecutiveFrames(&mPrevFrame, &mCurrentFrame);
+
+        std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
         vitaFunc->getDominantMotion(good_matches);
         vitaFunc->vitaTrack();
+        std::chrono::duration<double> sec = std::chrono::system_clock::now() - start;
+        std::cout << "Tracking time : " << sec.count() << " seconds" << std::endl;
+
         vitaFunc->addResidualFeatures(2);
         vitaFunc->drawTrackingFeatures();
         

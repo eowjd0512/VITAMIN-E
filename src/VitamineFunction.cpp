@@ -61,7 +61,7 @@ namespace VITAMINE{
         for (int i = 0; i < tf.size(); i++) {
             if(tf[i]->color[0] < 0)
                 tf[i]->color = Scalar(rng.uniform(0,255), rng.uniform(0, 255), rng.uniform(0, 255));
-            circle(src, tf[i]->pt, 1, tf[i]->color, -1, 8, 0);
+            circle(src, tf[i]->pt, 2, tf[i]->color, -1, 8, 0);
         }
         imshow("src",src);
         waitKey(30);
@@ -83,6 +83,7 @@ namespace VITAMINE{
         vector<KeyPoint>& mPrevKP = mPrevFrame->mvKeysUn;
         vector<KeyPoint>& mCurrentKP = mCurrentFrame->mvKeysUn;
 
+        //sample to 1/6
         for(int i=0; i<match_size; i++){
             pt0[i] = mPrevKP[good_matches[i].queryIdx].pt;
             pt1[i] = mCurrentKP[good_matches[i].trainIdx].pt;

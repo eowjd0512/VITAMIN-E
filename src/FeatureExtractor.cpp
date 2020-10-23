@@ -83,7 +83,7 @@ namespace VITAMINE
 
         bitwise_and(msk,flat_msk,msk);
         
-        Mat val_msk = (img >= percentile(img, 90.0));
+        Mat val_msk = (img >= percentile(img, 95.0));
         bitwise_and(msk, val_msk, msk);
         
         uchar* msk_ = (uchar*)msk.data;
