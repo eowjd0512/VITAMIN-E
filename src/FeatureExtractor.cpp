@@ -63,11 +63,10 @@ namespace VITAMINE
             }
   
         }
-
         //std::cout<<"Percentile for pixel("<<pixel+1<<"): "<<percent<<std::endl;
         return pixel+1;
     }
-    void FeatureExtractor::local_maxima(Mat img, vector<KeyPoint>& keypoints, int neighbor){
+    void FeatureExtractor::local_maxima(Mat img, vector<KeyPoint>& keypoints){
         //TODO: adjust using ED algorithm
         int wsize = 9;
         Mat ker = getStructuringElement(cv::MORPH_RECT, cv::Size(wsize, wsize));
@@ -84,22 +83,29 @@ namespace VITAMINE
 
         bitwise_and(msk,flat_msk,msk);
         
-        Mat val_msk = (img >= percentile(img, 95.0));
+        Mat val_msk = (img >= percentile(img, 90.0));
         bitwise_and(msk, val_msk, msk);
         
-        imshow("img", img);
-        imshow("imx", imx);
-        imshow("e_img", e_img);
-        imshow("msk", msk);
-        waitKey(30);
-        cout<<countNonZero(msk)<<endl;
-        /* idx = np.stack(np.nonzero(msk), axis=-1)
-        return msk[...,None].astype(np.float32), idx */
+        uchar* msk_ = (uchar*)msk.data;
+        for(int i=0; i<msk.rows;i++){
+            for(int j=0; j<msk.cols;j++){
+                if(msk_[i * msk.cols + j] > 0){
+                    keypoints.push_back(KeyPoint(j, i, 1));
+                    //circle(src, Point(j, i), 1.0, Scalar(255), 1, -1); 
+                }
+            }
+        }
+        //imshow("src", src);
+        //imshow("imx", imx);
+        //imshow("e_img", e_img);
+        //imshow("msk", msk);
+        //waitKey(30);
+        //cout<<countNonZero(msk)<<" "<<keypoints.size()<<endl;
     }
 
-    void FeatureExtractor::detect(const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors)
+    void FeatureExtractor::detect(const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors, Mat& kappa)
     { 
-        Mat kappa = curvature(image); //Done  
+        kappa = curvature(image); //Done  
         local_maxima(kappa, keypoints);
         extractor->compute(image, keypoints, descriptors);
     }

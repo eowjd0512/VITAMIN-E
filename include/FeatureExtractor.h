@@ -26,15 +26,17 @@ public:
 
     // Compute the features and descriptors on an image.
     // Mask is ignored in the current implementation.
-    void detect( const Mat& image, std::vector<KeyPoint>& keypoints, Mat& descriptors);
+    void detect( const Mat& image, std::vector<KeyPoint>& keypoints, Mat& descriptors, Mat& kappa);
     void detectORB(const Mat& image, const Mat& mask, 
     vector<KeyPoint>& keypoints,
     Mat& descriptors);
 
+    
+    
 private:
 
     Mat curvature(Mat src);
-    void local_maxima(Mat img, vector<KeyPoint>& keypoints, int neighbor=5);
+    void local_maxima(Mat img, vector<KeyPoint>& keypoints);
 
     Ptr<BriefDescriptorExtractor> extractor;
 };

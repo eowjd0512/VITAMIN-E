@@ -69,7 +69,8 @@ namespace VITAMINE
         int fMinThFAST = fSettings["ORBextractor.minThFAST"]; */
 
         mpFeatureExtractor = new FeatureExtractor();
-
+        vitaFunc = new VitamineFunction();
+        matcher = DescriptorMatcher::create(DescriptorMatcher::FLANNBASED);
         /* cout << endl  << "Feature Extractor Parameters: " << endl;
         cout << "- Number of Features: " << nFeatures << endl;
         cout << "- Scale Levels: " << nLevels << endl;
@@ -244,10 +245,43 @@ namespace VITAMINE
     }
     void Tracker::FeatureTrack(){
         //TODO:
-       /*  mdata, dbg = matcher.match(db[-2], db[-1])
-        T_A, T_b = get_dominant_motion(mdata)
-        trk, good = vitatrack(trk, kappa, T_A, T_b) */
+        std::vector< std::vector<DMatch> > knn_matches;
+        //cout<<mCurrentFrame.mDescriptors<<endl;
+        if(mPrevFrame.mDescriptors.type()!=CV_32F) {
+            mPrevFrame.mDescriptors.convertTo(mPrevFrame.mDescriptors, CV_32F);
+        }
+
+        if(mCurrentFrame.mDescriptors.type()!=CV_32F) {
+            mCurrentFrame.mDescriptors.convertTo(mCurrentFrame.mDescriptors, CV_32F);
+        }
+        matcher->knnMatch( mPrevFrame.mDescriptors, mCurrentFrame.mDescriptors, knn_matches, 2 );
+
+        //-- Filter matches using the Lowe's ratio test
+        const float ratio_thresh = 0.7f;
+        std::vector<DMatch> good_matches;
+        for (size_t i = 0; i < knn_matches.size(); i++)
+        {
+            if (knn_matches[i][0].distance < ratio_thresh * knn_matches[i][1].distance)
+            {
+                good_matches.push_back(knn_matches[i][0]);
+            }
+        }
         
+        /* //-- Draw matches
+        Mat img_matches;
+        drawMatches( mPrevFrame.img, mPrevFrame.mvKeys, mCurrentFrame.img, mCurrentFrame.mvKeys, good_matches, img_matches, Scalar::all(-1),
+                    Scalar::all(-1), std::vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
+        //-- Show detected matches
+        imshow("Good Matches", img_matches ); 
+        waitKey(30); */
+        
+        vitaFunc->loadConsecutiveFrames(&mPrevFrame, &mCurrentFrame);
+        vitaFunc->getDominantMotion(good_matches);
+        vitaFunc->vitaTrack();
+        vitaFunc->drawTrackingFeatures();
+        
+
+
         //visualize with debug
         /* path = path[:, good]
         cols = cols[good]

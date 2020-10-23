@@ -21,8 +21,8 @@ public:
     Frame(const cv::Mat &imGray, FeatureExtractor* extractor,cv::Mat &K, cv::Mat &distCoef);
 
 
-    Frame(const Frame& rhs){}; //copy constructor
-    ~Frame(){}; //destructor 
+    Frame(const Frame& frame); //copy constructor
+    //~Frame(){}; //destructor 
     
     // Extract features on the image. 
     void ExtractFeature(const cv::Mat &im);
@@ -50,17 +50,26 @@ public:
     // Vector of keypoints (original for visualization) and undistorted (actually used by the system).
     // In the stereo case, mvKeysUn is redundant as images must be rectified.
     // In the RGB-D case, RGB images can be distorted.
-    std::vector<cv::KeyPoint> mvKeys;
-    std::vector<cv::KeyPoint> mvKeysUn;
+    std::vector<KeyPoint> mvKeys;
+    std::vector<KeyPoint> mvKeysUn;
+    std::vector<KeyPoint> mvTrackedKeys;
 
     // Brief descriptor, each row associated to a keypoint.
-    Mat mDescriptors;
+    Mat mDescriptors, mtrackedKeyDescriptors;
+
+    //Curvature kappa
+    Mat kappa;
 
     // MapPoints associated to keypoints, NULL pointer if no association.
     std::vector<MapPoint*> mvpMapPoints;
 
     // Flag to identify outlier associations.
     std::vector<bool> mvbOutlier;
+
+    // Keypoints are assigned to cells in a grid to reduce matching complexity when projecting MapPoints.
+    //static float mfGridElementWidthInv;
+    //static float mfGridElementHeightInv;
+    //std::vector<std::size_t> mGrid[FRAME_GRID_COLS][FRAME_GRID_ROWS];
 
     // Camera pose.
     cv::Mat mTcw;
@@ -77,7 +86,8 @@ public:
 
     static bool mbInitialComputations;
 
-
+    //temp
+    cv::Mat img;
 protected:
     // Undistort keypoints given OpenCV distortion parameters.
     // Only for the RGB-D case. Stereo must be already rectified!
@@ -92,6 +102,8 @@ protected:
     cv::Mat mtcw;
     cv::Mat mRwc;
     cv::Mat mOw; //==mtwc
+
+    
 };
 
 }//namespace VITAMINE

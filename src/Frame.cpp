@@ -8,8 +8,27 @@ bool Frame::mbInitialComputations=true;
 float Frame::cx, Frame::cy, Frame::fx, Frame::fy, Frame::invfx, Frame::invfy;
 float Frame::mnMinX, Frame::mnMinY, Frame::mnMaxX, Frame::mnMaxY;
 
+//Copy Constructor
+Frame::Frame(const Frame &frame)
+    :mpFeatureExtractor(frame.mpFeatureExtractor),
+     mK(frame.mK.clone()), mDistCoef(frame.mDistCoef.clone()),
+     N(frame.N), mvKeys(frame.mvKeys),
+     mvKeysUn(frame.mvKeysUn), mvTrackedKeys(frame.mvTrackedKeys),
+     mDescriptors(frame.mDescriptors.clone()), mtrackedKeyDescriptors(frame.mtrackedKeyDescriptors.clone()),
+     kappa(frame.kappa),
+     mvpMapPoints(frame.mvpMapPoints), mvbOutlier(frame.mvbOutlier), mnId(frame.mnId),
+     img(frame.img.clone())
+{
+    /* for(int i=0;i<FRAME_GRID_COLS;i++)
+        for(int j=0; j<FRAME_GRID_ROWS; j++)
+            mGrid[i][j]=frame.mGrid[i][j]; */
+
+    /* if(!frame.mTcw.empty())
+        SetPose(frame.mTcw); */
+}
+
 Frame::Frame(const cv::Mat &imGray, FeatureExtractor* extractor, cv::Mat &K, cv::Mat &distCoef)
-    :mpFeatureExtractor(extractor), mK(K.clone()), mDistCoef(distCoef.clone())
+    :mpFeatureExtractor(extractor), mK(K.clone()), mDistCoef(distCoef.clone()), img(imGray.clone())
 {
     // Frame ID
     mnId=nNextId++;
@@ -32,13 +51,15 @@ Frame::Frame(const cv::Mat &imGray, FeatureExtractor* extractor, cv::Mat &K, cv:
         return;
 
     UndistortKeyPoints();
-
+    
     mvpMapPoints = vector<MapPoint*>(N,static_cast<MapPoint*>(NULL));
     mvbOutlier = vector<bool>(N,false);
 
     // This is done only for the first Frame (or after a change in the calibration)
     if(mbInitialComputations)
     {
+        mvTrackedKeys = mvKeysUn;
+        mtrackedKeyDescriptors = mDescriptors;
         ComputeImageBounds(imGray);
 
         //mfGridElementWidthInv=static_cast<float>(FRAME_GRID_COLS)/static_cast<float>(mnMaxX-mnMinX);
@@ -59,10 +80,28 @@ Frame::Frame(const cv::Mat &imGray, FeatureExtractor* extractor, cv::Mat &K, cv:
     
 
 }
+
 void Frame::ExtractFeature(const cv::Mat &im)
 {
-    mpFeatureExtractor->detect(im, mvKeys, mDescriptors);
+    mpFeatureExtractor->detect(im, mvKeys, mDescriptors, kappa);
 }
+
+/* void Frame::AssignFeaturesToGrid()
+{
+    int nReserve = 0.5f*N/(FRAME_GRID_COLS*FRAME_GRID_ROWS);
+    for(unsigned int i=0; i<FRAME_GRID_COLS;i++)
+        for (unsigned int j=0; j<FRAME_GRID_ROWS;j++)
+            mGrid[i][j].reserve(nReserve);
+
+    for(int i=0;i<N;i++)
+    {
+        const cv::KeyPoint &kp = mvKeysUn[i];
+
+        int nGridPosX, nGridPosY;
+        if(PosInGrid(kp,nGridPosX,nGridPosY))
+            mGrid[nGridPosX][nGridPosY].push_back(i);
+    }
+} */
 
 void Frame::UndistortKeyPoints()
 {

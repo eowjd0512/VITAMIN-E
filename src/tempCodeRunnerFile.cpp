@@ -1,14 +1,8 @@
-if(mImGray.channels()==3)
-        {
-            if(mbRGB)
-                cvtColor(mImGray,mImGray,cv::COLOR_RGB2GRAY);
-            else
-                cvtColor(mImGray,mImGray,cv::COLOR_BGR2GRAY);
-        }
-        else if(mImGray.channels()==4)
-        {
-            if(mbRGB)
-                cvtColor(mImGray,mImGray,cv::COLOR_RGBA2GRAY);
-            else
-                cvtColor(mImGray,mImGray,cv::COLOR_BGRA2GRAY);
-        }
+Mat pred_pt_ = Ab.colRange(0,2)*pt.t()+Ab.col(2);
+            Point pred_pt(pred_pt_);
+
+            if(pred_pt.x < mPrevFrame->mnMinX || pred_pt.x > mPrevFrame->mnMaxX || 
+              pred_pt.y < mPrevFrame->mnMinY || pred_pt.y > mPrevFrame->mnMaxY)
+                continue;
+
+            trackedPrevP[i] = pred_pt;

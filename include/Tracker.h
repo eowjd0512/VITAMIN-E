@@ -14,6 +14,7 @@
 #include "FeatureExtractor.h"
 #include "Initializer.h"
 #include "System.h"
+#include "VitamineFunction.h"
 
 #include <mutex>
 using namespace std;
@@ -25,6 +26,7 @@ class FrameDrawer;
 class Map;
 class Mapper;
 class System;
+class VitamineFunction;
 
 class Tracker{
     
@@ -94,6 +96,12 @@ private:
 
     //Motion Model
     cv::Mat mVelocity;
+
+    //Feature matchinig
+    Ptr<DescriptorMatcher> matcher;
+
+    //vitaminE main function
+    VitamineFunction* vitaFunc;
 
     //Color order (true RGB, false BGR, ignored if grayscale)
     bool mbRGB;
