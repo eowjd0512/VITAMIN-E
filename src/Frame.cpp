@@ -7,14 +7,15 @@ long unsigned int Frame::nNextId=0;
 bool Frame::mbInitialComputations=true;
 float Frame::cx, Frame::cy, Frame::fx, Frame::fy, Frame::invfx, Frame::invfy;
 float Frame::mnMinX, Frame::mnMinY, Frame::mnMaxX, Frame::mnMaxY;
+float Frame::mfGridElementWidthInv, Frame::mfGridElementHeightInv;
 
 //Copy Constructor
 Frame::Frame(const Frame &frame)
     :mpFeatureExtractor(frame.mpFeatureExtractor),
      mK(frame.mK.clone()), mDistCoef(frame.mDistCoef.clone()),
      N(frame.N), mvKeys(frame.mvKeys),
-     mvKeysUn(frame.mvKeysUn), mvTrackedKeys(frame.mvTrackedKeys),
-     mDescriptors(frame.mDescriptors.clone()), mtrackedKeyDescriptors(frame.mtrackedKeyDescriptors.clone()),
+     mvKeysUn(frame.mvKeysUn), //mvTrackedKeys(frame.mvTrackedKeys),
+     mDescriptors(frame.mDescriptors.clone()), //mtrackedKeyDescriptors(frame.mtrackedKeyDescriptors.clone()),
      kappa(frame.kappa),
      mvpMapPoints(frame.mvpMapPoints), mvbOutlier(frame.mvbOutlier), mnId(frame.mnId),
      img(frame.img.clone())
@@ -58,12 +59,12 @@ Frame::Frame(const cv::Mat &imGray, FeatureExtractor* extractor, cv::Mat &K, cv:
     // This is done only for the first Frame (or after a change in the calibration)
     if(mbInitialComputations)
     {
-        mvTrackedKeys = mvKeysUn;
-        mtrackedKeyDescriptors = mDescriptors;
+        //mvTrackedKeys = mvKeysUn;
+        //mtrackedKeyDescriptors = mDescriptors;
         ComputeImageBounds(imGray);
 
-        //mfGridElementWidthInv=static_cast<float>(FRAME_GRID_COLS)/static_cast<float>(mnMaxX-mnMinX);
-        //mfGridElementHeightInv=static_cast<float>(FRAME_GRID_ROWS)/static_cast<float>(mnMaxY-mnMinY);
+        mfGridElementWidthInv=static_cast<float>(FRAME_GRID_COLS)/static_cast<float>(mnMaxX-mnMinX);
+        mfGridElementHeightInv=static_cast<float>(FRAME_GRID_ROWS)/static_cast<float>(mnMaxY-mnMinY);
 
         fx = K.at<float>(0,0);
         fy = K.at<float>(1,1);
@@ -75,7 +76,7 @@ Frame::Frame(const cv::Mat &imGray, FeatureExtractor* extractor, cv::Mat &K, cv:
         mbInitialComputations=false;
     }
 
-    //AssignFeaturesToGrid();
+    AssignFeaturesToGrid();
 
     
 
@@ -86,7 +87,31 @@ void Frame::ExtractFeature(const cv::Mat &im)
     mpFeatureExtractor->detect(im, mvKeys, mDescriptors, kappa);
 }
 
-/* void Frame::AssignFeaturesToGrid()
+bool Frame::PosInGrid(const cv::KeyPoint &kp, int &posX, int &posY)
+{
+    posX = round((kp.pt.x-mnMinX)*mfGridElementWidthInv);
+    posY = round((kp.pt.y-mnMinY)*mfGridElementHeightInv);
+
+    //Keypoint's coordinates are undistorted, which could cause to go out of the image
+    if(posX<0 || posX>=FRAME_GRID_COLS || posY<0 || posY>=FRAME_GRID_ROWS)
+        return false;
+
+    return true;
+}
+
+bool Frame::PosInGrid(const cv::Point &p, int &posX, int &posY)
+{
+    posX = round((p.x-mnMinX)*mfGridElementWidthInv);
+    posY = round((p.y-mnMinY)*mfGridElementHeightInv);
+
+    //Keypoint's coordinates are undistorted, which could cause to go out of the image
+    if(posX<0 || posX>=FRAME_GRID_COLS || posY<0 || posY>=FRAME_GRID_ROWS)
+        return false;
+
+    return true;
+}
+
+void Frame::AssignFeaturesToGrid()
 {
     int nReserve = 0.5f*N/(FRAME_GRID_COLS*FRAME_GRID_ROWS);
     for(unsigned int i=0; i<FRAME_GRID_COLS;i++)
@@ -101,7 +126,7 @@ void Frame::ExtractFeature(const cv::Mat &im)
         if(PosInGrid(kp,nGridPosX,nGridPosY))
             mGrid[nGridPosX][nGridPosY].push_back(i);
     }
-} */
+}
 
 void Frame::UndistortKeyPoints()
 {

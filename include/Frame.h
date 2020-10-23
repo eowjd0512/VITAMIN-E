@@ -10,6 +10,8 @@
 using namespace std;
 
 namespace VITAMINE{
+#define FRAME_GRID_ROWS 48
+#define FRAME_GRID_COLS 64
 
 class MapPoint;
 
@@ -67,9 +69,9 @@ public:
     std::vector<bool> mvbOutlier;
 
     // Keypoints are assigned to cells in a grid to reduce matching complexity when projecting MapPoints.
-    //static float mfGridElementWidthInv;
-    //static float mfGridElementHeightInv;
-    //std::vector<std::size_t> mGrid[FRAME_GRID_COLS][FRAME_GRID_ROWS];
+    static float mfGridElementWidthInv;
+    static float mfGridElementHeightInv;
+    std::vector<std::size_t> mGrid[FRAME_GRID_COLS][FRAME_GRID_ROWS];
 
     // Camera pose.
     cv::Mat mTcw;
@@ -88,6 +90,10 @@ public:
 
     //temp
     cv::Mat img;
+
+    // Compute the cell of a point for feature tracking (return false if outside the grid)
+    bool PosInGrid(const cv::Point &p, int &posX, int &posY);
+
 protected:
     // Undistort keypoints given OpenCV distortion parameters.
     // Only for the RGB-D case. Stereo must be already rectified!
@@ -96,6 +102,12 @@ protected:
 
     // Computes image bounds for the undistorted image (called in the constructor).
     void ComputeImageBounds(const cv::Mat &im);
+
+    // Assign keypoints to the grid for speed up feature matching (called in the constructor).
+    void AssignFeaturesToGrid();
+
+    // Compute the cell of a keypoint (return false if outside the grid)
+    bool PosInGrid(const cv::KeyPoint &kp, int &posX, int &posY);
 
     // Rotation, translation and camera center
     cv::Mat mRcw;

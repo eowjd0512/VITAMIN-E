@@ -1,17 +1,55 @@
 #include "VitamineFunction.h"
+#include<Eigen/Dense>
 
 namespace VITAMINE{
+
     const void VitamineFunction::setInitialFeatures(){
         std::vector<KeyPoint>& KeyPoints = mPrevFrame->mvKeysUn;
         
         for(int i=0; i< KeyPoints.size(); i++){
-            TrackedFeature* tf_ = new TrackedFeature();
-            tf_->pt = KeyPoints[i].pt;
+            TrackedFeature* tf_ = new TrackedFeature(KeyPoints[i].pt);
 
             tf.push_back(tf_);
         }
     }
-    const void VitamineFunction::addResidualFeatures(){
+    const void VitamineFunction::addResidualFeatures(int cntThres){
+        
+        //1. get all indices of a grid that include local features
+        Eigen::MatrixXi cntLocalFeatureInFrameGrid = Eigen::MatrixXi::Zero(FRAME_GRID_COLS, FRAME_GRID_ROWS);
+        
+        for(int i=0; i<FRAME_GRID_COLS; i++){
+            for(int j=0; j<FRAME_GRID_ROWS; j++){
+                if(mCurrentFrame->mGrid[i][j].size()>0){
+                    cntLocalFeatureInFrameGrid(i, j) = mCurrentFrame->mGrid[i][j].size();
+                }
+            }
+        }
+        //2. tracked feature assignment to a grid
+        Eigen::MatrixXi cntTrackFeatureInFrameGrid = Eigen::MatrixXi::Zero(FRAME_GRID_COLS, FRAME_GRID_ROWS);
+        
+        for(int i=0; i<tf.size(); i++){
+            int x, y;
+            if(mCurrentFrame->PosInGrid(tf[i]->pt, x, y)){
+                cntTrackFeatureInFrameGrid(x, y)++;
+            }
+        }
+
+        //3. check if a local feature in a grid cell already exists
+        Eigen::MatrixXi diffCntFeature = cntLocalFeatureInFrameGrid - cntTrackFeatureInFrameGrid;
+        std::vector<KeyPoint>& KeyPoints = mCurrentFrame->mvKeysUn;
+
+        for(int i=0; i<FRAME_GRID_COLS; i++){
+            for(int j=0; j<FRAME_GRID_ROWS; j++){
+                if(diffCntFeature(i, j) >= cntThres){
+                    vector<size_t>& localFeatIdx = mCurrentFrame->mGrid[i][j];
+                    for(int k=0; k<localFeatIdx.size(); k++){
+                        //cout<<KeyPoints[localFeatIdx[k]].pt<<endl;
+                        TrackedFeature* tf_ = new TrackedFeature(KeyPoints[localFeatIdx[k]].pt);
+                        tf.push_back(tf_);
+                    }
+                }
+            }
+        }
 
     }
     const void VitamineFunction::drawTrackingFeatures(){
@@ -27,7 +65,7 @@ namespace VITAMINE{
         imshow("src",src);
         waitKey(30);
     }
-
+    
     const void VitamineFunction::loadConsecutiveFrames(Frame* prevFrame, Frame* currentFrame){
         mPrevFrame = prevFrame;
         mCurrentFrame = currentFrame;
@@ -193,8 +231,5 @@ namespace VITAMINE{
     double VitamineFunction::w_fn(const double x, const double sigma){
         return (1.0 - p_fn(x, sigma));
     }
-    
-    
-    
 
 }

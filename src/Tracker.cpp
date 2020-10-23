@@ -278,42 +278,9 @@ namespace VITAMINE
         vitaFunc->loadConsecutiveFrames(&mPrevFrame, &mCurrentFrame);
         vitaFunc->getDominantMotion(good_matches);
         vitaFunc->vitaTrack();
+        vitaFunc->addResidualFeatures(2);
         vitaFunc->drawTrackingFeatures();
         
-
-
-        //visualize with debug
-        /* path = path[:, good]
-        cols = cols[good]
-        path = np.append(path, trk[None,:], axis=0)
-
-        tmp = img.copy()
-        for p, c in zip(path.swapaxes(0,1)[...,::-1], cols):
-            cv2.polylines(tmp,
-                    #path.swapaxes(0,1)[...,::-1],
-                    p[None,...],
-                    False, c
-                    )
-        img = cv2.addWeighted(img, 0.75, tmp, 0.25, 0.0)
-        for p, c in zip(trk,cols):
-            cv2.circle(img, (p[1], p[0]), 2, c)
-
-
-        luv = cv2.cvtColor(img, cv2.COLOR_BGR2LUV)
-        luv[..., 2] = 128
-        img2 = cv2.cvtColor(luv, cv2.COLOR_LUV2BGR)
-        viz = np.clip(img/255.+maxima, 0.0, 1.0)
-        #viz = cv2.addWeighted(img, 0.2, kappa, 255./0.8, 0.0,
-        #        dtype=cv2.CV_8U)
-        #viz = np.concatenate( (img, img2), axis=1)
-        #viz = kappa - kappa.min(axis=(0,1),keepdims=True)
-        cv2.imwrite('/tmp/frame{:04d}.png'.format(iter), (viz*255).astype(np.uint8) )
-        cv2.imshow('img', viz)
-        k = cv2.waitKey(1)
-        if k in [27, ord('q')]:
-            break
-        iter += 1 */
-
     }
     
     void Tracker::SetMapper(Mapper *pMapper)

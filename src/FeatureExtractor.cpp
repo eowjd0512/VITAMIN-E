@@ -8,7 +8,7 @@ namespace VITAMINE
         const int delta = 0;
         const int ddepth = CV_8U; //CV_64F
         const int ksize = 1;
-        
+        //GaussianBlur(src, src, Size(3, 3), 0, 0, BORDER_DEFAULT);
         Mat fx, fy, fxx, fyy, fxy;
         cv::Sobel( src, fx, ddepth, 1, 0, ksize, scale, delta, BORDER_DEFAULT );
         cv::Sobel( src, fy, ddepth, 0, 1, ksize, scale, delta, BORDER_DEFAULT );
