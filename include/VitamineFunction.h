@@ -39,9 +39,10 @@ public:
     
     struct TrackedFeature{
         Point pt;
+        Scalar color;
         //vector<unsigned int> viewIdx;
 
-        TrackedFeature(Point pt_): pt(pt_) {};
+        TrackedFeature(Point pt_): pt(pt_), color(Scalar::all(-1)) {};
     };
 
     vector<TrackedFeature*> tf; 

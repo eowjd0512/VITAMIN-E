@@ -59,8 +59,9 @@ namespace VITAMINE{
         RNG rng(12345);
         
         for (int i = 0; i < tf.size(); i++) {
-            Scalar color = Scalar(rng.uniform(0,255), rng.uniform(0, 255), rng.uniform(0, 255));
-            circle(src, tf[i]->pt, 1, color, -1, 8, 0);
+            if(tf[i]->color[0] < 0)
+                tf[i]->color = Scalar(rng.uniform(0,255), rng.uniform(0, 255), rng.uniform(0, 255));
+            circle(src, tf[i]->pt, 1, tf[i]->color, -1, 8, 0);
         }
         imshow("src",src);
         waitKey(30);
