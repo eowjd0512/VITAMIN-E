@@ -7,7 +7,7 @@ My resume
 <http://eowjd0512.github.io/>
 
 # VITAMIN-E
-re-implementation of VITAMIN-E SLAM
+Re-implementation of VITAMIN-E SLAM
 
 This project was started to re-produce the paper
 
