@@ -228,9 +228,6 @@ namespace VITAMINE
         } */
 
         mPrevFrame = Frame(mCurrentFrame);
-
-        imshow("mImGray", mImGray);
-        cv::waitKey(30);
     }
     void Tracker::UpdateMotionModel(){
         // Update motion model

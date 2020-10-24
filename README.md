@@ -2,7 +2,7 @@ Email
 
 <eowjd4@naver.com>
 
-My resume
+My CV
 
 <http://eowjd0512.github.io/>
 

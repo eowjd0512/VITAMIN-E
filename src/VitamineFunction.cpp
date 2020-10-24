@@ -83,7 +83,6 @@ namespace VITAMINE{
         vector<KeyPoint>& mPrevKP = mPrevFrame->mvKeysUn;
         vector<KeyPoint>& mCurrentKP = mCurrentFrame->mvKeysUn;
 
-        //sample to 1/6
         for(int i=0; i<match_size; i++){
             pt0[i] = mPrevKP[good_matches[i].queryIdx].pt;
             pt1[i] = mCurrentKP[good_matches[i].trainIdx].pt;
@@ -91,8 +90,9 @@ namespace VITAMINE{
 
         Mat mpt0(pt0);
         Mat mpt1(pt1);
-        
-        Ab = estimateAffine2D(mpt0, mpt1);
+
+        if(pt0.size()>50 && pt1.size()>50)
+            Ab = estimateAffine2D(mpt0, mpt1);
     }
     const void VitamineFunction::vitaTrack(){
         
