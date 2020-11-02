@@ -75,6 +75,12 @@ namespace VITAMINE
         return Tcw;
 
     }
+    void System::Reset()
+    {
+        unique_lock<mutex> lock(mMutexReset);
+        mbReset = true;
+    }
+
     void System::Shutdown(){
 
     }

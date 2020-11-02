@@ -34,7 +34,7 @@ public:
 
     cv::Mat Track(const cv::Mat &im);
     void Shutdown();
-
+    void Reset();
 
     std::vector<MapPoint*> mTrackedMapPoints;
     std::vector<cv::KeyPoint> mTrackedKeyPointsUn;

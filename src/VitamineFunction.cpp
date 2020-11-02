@@ -7,8 +7,7 @@ namespace VITAMINE{
         std::vector<KeyPoint>& KeyPoints = mPrevFrame->mvKeysUn;
         
         for(int i=0; i< KeyPoints.size(); i++){
-            TrackedFeature* tf_ = new TrackedFeature(KeyPoints[i].pt);
-
+            TrackedFeature* tf_ = new TrackedFeature(KeyPoints[i].pt, mPrevFrame->mnId);
             tf.push_back(tf_);
         }
     }
@@ -44,7 +43,7 @@ namespace VITAMINE{
                     vector<size_t>& localFeatIdx = mCurrentFrame->mGrid[i][j];
                     for(int k=0; k<localFeatIdx.size(); k++){
                         //cout<<KeyPoints[localFeatIdx[k]].pt<<endl;
-                        TrackedFeature* tf_ = new TrackedFeature(KeyPoints[localFeatIdx[k]].pt);
+                        TrackedFeature* tf_ = new TrackedFeature(KeyPoints[localFeatIdx[k]].pt, mCurrentFrame->mnId);
                         tf.push_back(tf_);
                     }
                 }
@@ -133,6 +132,7 @@ namespace VITAMINE{
         assert(predictedP.size() == tf.size());
         for(int i=0; i<tf.size(); i++){
             tf[i]->pt = predictedP[i];
+            tf[i]->viewIdx.push_back(mCurrentFrame->mnId);
         }
       
     }
