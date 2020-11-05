@@ -18,7 +18,7 @@ This project was started to re-produce the paper
 
 1. Eigen - the latest version (>= 3.3.9) from <https://gitlab.com/libeigen/eigen>
 
-2. OpenCV (we tested at the version 4.4.0)
+2. OpenCV (we tested at the version 4.5.0)
 
 3. Panglin - <https://github.com/stevenlovegrove/Pangolin>
 
