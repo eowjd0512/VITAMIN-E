@@ -28,7 +28,7 @@ public:
     // Main function
     void Run();
 
-    Mapper& operator=(const Mapper& rhs()){};//copy assignment operator
+    //Mapper& operator=(const Mapper& rhs()){};//copy assignment operator
 private:
     Map* mpMap;
     Tracker* mpTracker;

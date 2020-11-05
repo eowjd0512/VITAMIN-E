@@ -90,16 +90,16 @@ void Viewer::Run()
             bFollow = false;
         }
 
-        /* if(menuLocalizationMode && !bLocalizationMode)
-        {
-            mpSystem->ActivateLocalizationMode();
-            bLocalizationMode = true;
-        }
-        else if(!menuLocalizationMode && bLocalizationMode)
-        {
-            mpSystem->DeactivateLocalizationMode();
-            bLocalizationMode = false;
-        } */
+        //f(menuLocalizationMode && !bLocalizationMode)
+        //{
+        //    mpSystem->ActivateLocalizationMode();
+        //    bLocalizationMode = true;
+        //}
+        //else if(!menuLocalizationMode && bLocalizationMode)
+        //{
+        //    mpSystem->DeactivateLocalizationMode();
+        //    bLocalizationMode = false;
+        //}
 
         d_cam.Activate(s_cam);
         glClearColor(1.0f,1.0f,1.0f,1.0f);
@@ -111,10 +111,10 @@ void Viewer::Run()
 
         pangolin::FinishFrame();
 
-        cv::Mat im = mpFrameDrawer->DrawFrame();
+        /* cv::Mat im = mpFrameDrawer->DrawFrame();
         cv::imshow("ORB-SLAM2: Current Frame",im);
         cv::imwrite("Image/"+std::to_string(i)+".png",im);
-        cv::waitKey(mT);
+        cv::waitKey(mT); */
 
         if(menuReset)
         {
@@ -122,8 +122,8 @@ void Viewer::Run()
             menuShowKeyFrames = true;
             menuShowPoints = true;
             //menuLocalizationMode = false;
-            /* if(bLocalizationMode)
-                mpSystem->DeactivateLocalizationMode(); */
+            //if(bLocalizationMode)
+            //    mpSystem->DeactivateLocalizationMode();
             bLocalizationMode = false;
             bFollow = true;
             menuFollowCamera = true;

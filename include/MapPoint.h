@@ -8,17 +8,24 @@
 
 namespace VITAMINE{
 
-class MapPoint{
+class MapPoint{ //TODO: smart pointer
     
 public:
-    MapPoint(){}; //default constructor
-    MapPoint(const MapPoint& rhs){}; //copy constructor
+    MapPoint(const cv::Mat &Pos); //default constructor
+    //MapPoint(const MapPoint& rhs){}; //copy constructor
     ~MapPoint(){}; //destructor 
-    //TODO: smart pointer
-
+    
+    bool isBad();
+    cv::Mat GetWorldPos();
 private:
 //cv::Mat
-
+    cv::Mat mWorldPos;
+    
+    // Bad flag (we do not currently erase MapPoint from memory)
+     bool mbBad;
+     
+    std::mutex mMutexPos;
+    std::mutex mMutexFeatures;
 };
 
 }//namespace VITAMINE

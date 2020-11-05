@@ -21,12 +21,12 @@ Frame::Frame(const Frame &frame)
      mvpMapPoints(frame.mvpMapPoints), mvbOutlier(frame.mvbOutlier), mnId(frame.mnId),
      img(frame.img.clone())
 {
-    /* for(int i=0;i<FRAME_GRID_COLS;i++)
+    for(int i=0;i<FRAME_GRID_COLS;i++)
         for(int j=0; j<FRAME_GRID_ROWS; j++)
-            mGrid[i][j]=frame.mGrid[i][j]; */
+            mGrid[i][j]=frame.mGrid[i][j];
 
-    /* if(!frame.mTcw.empty())
-        SetPose(frame.mTcw); */
+    if(!frame.mTcw.empty())
+        SetPose(frame.mTcw);
 }
 
 Frame::Frame(const cv::Mat &imGray, FeatureExtractor* extractor, cv::Mat &K, cv::Mat &distCoef)
@@ -90,6 +90,36 @@ void Frame::ExtractFeature(const cv::Mat &im)
     std::chrono::duration<double> sec = std::chrono::system_clock::now() - start;
     std::cout << "Feature Extraction time : " << sec.count() << " seconds" << std::endl;
 
+}
+
+void Frame::SetPose(cv::Mat Tcw)
+{
+    mTcw = Tcw.clone();
+    UpdatePoseMatrices();
+}
+
+cv::Mat Frame::GetPose()
+{
+    //unique_lock<mutex> lock(mMutexPose);
+    return mTcw.clone();
+}
+
+cv::Mat Frame::GetPoseInverse()
+{
+    //unique_lock<mutex> lock(mMutexPose);
+    return mTwc.clone();
+}
+
+void Frame::UpdatePoseMatrices()
+{ 
+    mRcw = mTcw.rowRange(0,3).colRange(0,3);
+    mRwc = mRcw.t();
+    mtcw = mTcw.rowRange(0,3).col(3);
+    mOw = -mRcw.t()*mtcw;
+
+    mTwc = cv::Mat::eye(4,4,mTcw.type());
+    mRwc.copyTo(mTwc.rowRange(0,3).colRange(0,3));
+    mOw.copyTo(mTwc.rowRange(0,3).col(3));
 }
 
 bool Frame::PosInGrid(const cv::KeyPoint &kp, int &posX, int &posY)

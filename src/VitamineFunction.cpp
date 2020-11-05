@@ -3,11 +3,25 @@
 
 namespace VITAMINE{
 
+    void VitamineFunction::AddMapPoint(MapPoint* pMP,const unsigned int pt_idx) noexcept{
+        tf[pt_idx]->mapPoint = pMP;
+    }
+
+
+    int VitamineFunction::getTrackedFeatureNum(unsigned int frame_id) const noexcept{
+        int cnt = 0;
+        for(auto i=0; i<tf.size(); i++){
+            if(tf[i]->pt_history.count(frame_id))
+                cnt++;
+        }
+        return cnt;
+    }
+
     const void VitamineFunction::setInitialFeatures(){
         std::vector<KeyPoint>& KeyPoints = mPrevFrame->mvKeysUn;
         
         for(int i=0; i< KeyPoints.size(); i++){
-            TrackedFeature* tf_ = new TrackedFeature(KeyPoints[i].pt, mPrevFrame->mnId);
+            Feature* tf_ = new Feature(KeyPoints[i].pt, mPrevFrame->mnId);
             tf.push_back(tf_);
         }
     }
@@ -43,7 +57,7 @@ namespace VITAMINE{
                     vector<size_t>& localFeatIdx = mCurrentFrame->mGrid[i][j];
                     for(int k=0; k<localFeatIdx.size(); k++){
                         //cout<<KeyPoints[localFeatIdx[k]].pt<<endl;
-                        TrackedFeature* tf_ = new TrackedFeature(KeyPoints[localFeatIdx[k]].pt, mCurrentFrame->mnId);
+                        Feature* tf_ = new Feature(KeyPoints[localFeatIdx[k]].pt, mCurrentFrame->mnId);
                         tf.push_back(tf_);
                     }
                 }
@@ -112,7 +126,7 @@ namespace VITAMINE{
 
             if(pred_pt.x < mPrevFrame->mnMinX || pred_pt.x > mPrevFrame->mnMaxX || 
               pred_pt.y < mPrevFrame->mnMinY || pred_pt.y > mPrevFrame->mnMaxY){
-                tf[i] = static_cast<TrackedFeature*>(NULL);
+                tf[i] = static_cast<Feature*>(NULL);
                 tf.erase(tf.begin()+i);
                 i--;
                 continue;
@@ -133,6 +147,7 @@ namespace VITAMINE{
         for(int i=0; i<tf.size(); i++){
             tf[i]->pt = predictedP[i];
             tf[i]->viewIdx.push_back(mCurrentFrame->mnId);
+            tf[i]->pt_history[mCurrentFrame->mnId] = predictedP[i];
         }
       
     }
@@ -223,14 +238,14 @@ namespace VITAMINE{
         } */
     }
 
-    double VitamineFunction::p_fn(const double x, const double sigma){
+    double VitamineFunction::p_fn(const double x, const double sigma)const{
         // really should be `rho`, but using p anyway
         // Geman-McClure Kernel
         double xsq = pow(x,2);
         double ssq = pow(sigma,2);
         return (xsq / (xsq + ssq));
     }
-    double VitamineFunction::w_fn(const double x, const double sigma){
+    double VitamineFunction::w_fn(const double x, const double sigma)const{
         return (1.0 - p_fn(x, sigma));
     }
 

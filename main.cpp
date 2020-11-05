@@ -23,6 +23,7 @@ int main(int argc, char **argv)
     {  
 
         cap >> frame;  
+        resize(frame, frame, Size(640,480));
         vitamine.Track(frame);
 
     }  

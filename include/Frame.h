@@ -7,6 +7,8 @@
 #include "opencv2/opencv.hpp"
 #include "FeatureExtractor.h"
 #include "MapPoint.h"
+
+#include <mutex>
 using namespace std;
 
 namespace VITAMINE{
@@ -29,6 +31,14 @@ public:
     // Extract features on the image. 
     void ExtractFeature(const cv::Mat &im);
 
+    // Set the camera pose.
+    void SetPose(cv::Mat Tcw);
+
+    // Computes rotation, translation and camera center matrices from the camera pose.
+    void UpdatePoseMatrices();
+
+    cv::Mat GetPose();
+    cv::Mat GetPoseInverse();
 public:
     // Feature extractor. The right is used only in the stereo case.
     FeatureExtractor* mpFeatureExtractor;
@@ -75,6 +85,7 @@ public:
 
     // Camera pose.
     cv::Mat mTcw;
+    cv::Mat mTwc;
 
     // Current and Next Frame id.
     static long unsigned int nNextId;
@@ -115,7 +126,7 @@ protected:
     cv::Mat mRwc;
     cv::Mat mOw; //==mtwc
 
-    
+    //std::mutex mMutexPose;
 };
 
 }//namespace VITAMINE

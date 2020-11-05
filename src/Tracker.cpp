@@ -125,7 +125,7 @@ namespace VITAMINE
         FeatureTrack();
         
         // Get Map Mutex -> Map cannot be changed
-        /*unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
+        unique_lock<mutex> lock(mpMap->mMutexMapUpdate);
 
          if(mState==NOT_INITIALIZED)
         {
@@ -138,7 +138,7 @@ namespace VITAMINE
             if(mState!=OK)
                 return;
         }
-        else
+        /* else
         {
             // System is initialized. Track Frame.
             bool bOK;
@@ -229,6 +229,189 @@ namespace VITAMINE
 
         mPrevFrame = Frame(mCurrentFrame);
     }
+
+    void Tracker::MonocularInitialization()
+    {
+
+        if(!mpInitializer)
+        {
+            // Set Reference Frame
+            if(vitaFunc->tf.size()>100)
+            {
+                mInitialFrame = Frame(mCurrentFrame);
+                //mLastFrame = Frame(mCurrentFrame);
+                /* mvbPrevMatched.resize(mCurrentFrame.mvKeysUn.size());
+                for(size_t i=0; i<mCurrentFrame.mvKeysUn.size(); i++)
+                    mvbPrevMatched[i]=mCurrentFrame.mvKeysUn[i].pt; */
+
+                if(mpInitializer)
+                    delete mpInitializer;
+
+                mpInitializer =  new Initializer(mCurrentFrame,1.0,200, vitaFunc);
+
+                //fill(mvIniMatches.begin(),mvIniMatches.end(),-1);
+
+                return;
+            }
+        }
+        else
+        {
+            int nmatches = vitaFunc->getTrackedFeatureNum(mInitialFrame.mnId);
+            cout<<"tracked num: "<<nmatches<<endl;
+            // Try to initialize
+            if(nmatches<=100)
+            {
+                delete mpInitializer;
+                mpInitializer = static_cast<Initializer*>(NULL);
+                //fill(mvIniMatches.begin(),mvIniMatches.end(),-1);
+                return;
+            }
+
+            // Find correspondences
+            //ORBmatcher matcher(0.9,true);
+            //int nmatches = matcher.SearchForInitialization(mInitialFrame,mCurrentFrame,mvbPrevMatched,mvIniMatches,100);
+
+
+            cv::Mat Rcw; // Current Camera Rotation
+            cv::Mat tcw; // Current Camera Translation
+            vector<bool> vbTriangulated; // Triangulated Correspondences (mvIniMatches)
+            vector<unsigned int> idx;
+            if(mpInitializer->Initialize(mCurrentFrame, Rcw, tcw, mvIniP3D, vbTriangulated, idx))
+            {
+                cout<<"here?"<<endl;
+                /* for(size_t i=0, iend=mvIniMatches.size(); i<iend;i++)
+                {
+                    if(mvIniMatches[i]>=0 && !vbTriangulated[i])
+                    {
+                        mvIniMatches[i]=-1;
+                        nmatches--;
+                    }
+                } */
+
+                // Set Frame Poses
+                mInitialFrame.SetPose(cv::Mat::eye(4,4,CV_32F));
+                cv::Mat Tcw = cv::Mat::eye(4,4,CV_32F);
+                Rcw.copyTo(Tcw.rowRange(0,3).colRange(0,3));
+                tcw.copyTo(Tcw.rowRange(0,3).col(3));
+                mCurrentFrame.SetPose(Tcw);
+
+                int cnt=0;
+                for(auto i=0; i<vbTriangulated.size(); i++){
+                    if(vbTriangulated[i])
+                        cnt++;
+                }
+                cout<<"triangulated: "<<cnt<<endl;
+                CreateInitialMapMonocular(vbTriangulated, idx);
+            }
+        }
+    }
+    void Tracker::CreateInitialMapMonocular(const vector<bool>& vbTriangulated, const vector<unsigned int>& pt_idx)
+    {
+        // Create KeyFrames
+        //KeyFrame* pKFini = new KeyFrame(mInitialFrame,mpMap,mpKeyFrameDB);
+        //KeyFrame* pKFcur = new KeyFrame(mCurrentFrame,mpMap,mpKeyFrameDB);
+
+
+        //pKFini->ComputeBoW();
+        //pKFcur->ComputeBoW();
+
+        // Insert KFs in the map
+        mpMap->AddFrame(mInitialFrame);
+        mpMap->AddFrame(mCurrentFrame);
+
+        // Create MapPoints and asscoiate to keyframes
+        for(size_t i=0; i<pt_idx.size();i++)
+        {
+            if(!vbTriangulated[i])
+                continue;
+
+            //Create MapPoint.
+            cv::Mat worldPos(mvIniP3D[i]);
+            cout<<worldPos<<endl;
+            MapPoint* pMP = new MapPoint(worldPos);
+
+            //pKFini->AddMapPoint(pMP,i);
+            //pKFcur->AddMapPoint(pMP,mvIniMatches[i]);
+
+            //pMP->AddObservation(mInitialFrame.mnId,i);
+            //pMP->AddObservation(mCurrentFrame.mnId,mvIniMatches[i]);
+
+            //pMP->ComputeDistinctiveDescriptors();
+            //pMP->UpdateNormalAndDepth();
+
+            //Fill Current Frame structure
+            //mCurrentFrame.mvpMapPoints[mvIniMatches[i]] = pMP;
+            //mCurrentFrame.mvbOutlier[mvIniMatches[i]] = false;
+
+            //Add to Map
+            mpMap->AddMapPoint(pMP);
+            vitaFunc->AddMapPoint(pMP,pt_idx[i]);
+        }
+
+        // Update Connections
+        //pKFini->UpdateConnections();
+        //pKFcur->UpdateConnections();
+
+        cout<<mInitialFrame.mTcw<<endl;
+        cout<<mCurrentFrame.mTcw<<endl;
+        
+
+        // Bundle Adjustment
+        cout << "New Map created with " << mpMap->MapPointsInMap() << " points" << endl;
+
+        //Optimizer::GlobalBundleAdjustemnt(mpMap,20);
+
+        // Set median depth to 1
+        //float medianDepth = pKFini->ComputeSceneMedianDepth(2);
+        //float invMedianDepth = 1.0f/medianDepth;
+
+        /* if(medianDepth<0 || pKFcur->TrackedMapPoints(1)<100)
+        {
+            cout << "Wrong initialization, reseting..." << endl;
+            Reset();
+            return;
+        } */
+
+        // Scale initial baseline
+        /* cv::Mat Tc2w = pKFcur->GetPose();
+        Tc2w.col(3).rowRange(0,3) = Tc2w.col(3).rowRange(0,3)*invMedianDepth;
+        pKFcur->SetPose(Tc2w);
+
+        // Scale points
+        vector<MapPoint*> vpAllMapPoints = pKFini->GetMapPointMatches();
+        for(size_t iMP=0; iMP<vpAllMapPoints.size(); iMP++)
+        {
+            if(vpAllMapPoints[iMP])
+            {
+                MapPoint* pMP = vpAllMapPoints[iMP];
+                pMP->SetWorldPos(pMP->GetWorldPos()*invMedianDepth);
+            }
+        } */
+
+        //mpLocalMapper->InsertKeyFrame(pKFini);
+        //mpLocalMapper->InsertKeyFrame(pKFcur);
+
+        //mCurrentFrame.SetPose(pKFcur->GetPose());
+        //mnLastKeyFrameId=mCurrentFrame.mnId;
+        //mpLastKeyFrame = pKFcur;
+
+        //mvpLocalKeyFrames.push_back(pKFcur);
+        //mvpLocalKeyFrames.push_back(pKFini);
+        //mvpLocalMapPoints=mpMap->GetAllMapPoints();
+        //mpReferenceKF = pKFcur;
+        //mCurrentFrame.mpReferenceKF = pKFcur;
+
+        //mLastFrame = Frame(mCurrentFrame);
+
+        //mpMap->SetReferenceMapPoints(mvpLocalMapPoints);
+
+        mpMapDrawer->SetCurrentCameraPose(mCurrentFrame.GetPose());
+
+        //mpMap->mvpKeyFrameOrigins.push_back(pKFini);
+
+        mState=OK;
+    }
+
     void Tracker::UpdateMotionModel(){
         // Update motion model
         /* if(!mLastFrame.mTcw.empty())

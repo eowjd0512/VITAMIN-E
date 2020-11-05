@@ -43,10 +43,10 @@ MapDrawer::MapDrawer(Map* pMap, const string &strSettingPath):mpMap(pMap)
 
 void MapDrawer::DrawMapPoints()
 {
-    /* const vector<MapPoint*> &vpMPs = mpMap->GetAllMapPoints();
-    const vector<MapPoint*> &vpRefMPs = mpMap->GetReferenceMapPoints();
+    const vector<MapPoint*> &vpMPs = mpMap->GetAllMapPoints();
+    /* const vector<MapPoint*> &vpRefMPs = mpMap->GetReferenceMapPoints();
 
-    set<MapPoint*> spRefMPs(vpRefMPs.begin(), vpRefMPs.end());
+    set<MapPoint*> spRefMPs(vpRefMPs.begin(), vpRefMPs.end()); */
 
     if(vpMPs.empty())
         return;
@@ -57,7 +57,7 @@ void MapDrawer::DrawMapPoints()
 
     for(size_t i=0, iend=vpMPs.size(); i<iend;i++)
     {
-        if(vpMPs[i]->isBad() || spRefMPs.count(vpMPs[i]))
+        if(vpMPs[i]->isBad())// || spRefMPs.count(vpMPs[i]))
             continue;
         cv::Mat pos = vpMPs[i]->GetWorldPos();
         glVertex3f(pos.at<float>(0),pos.at<float>(1),pos.at<float>(2));
@@ -68,16 +68,16 @@ void MapDrawer::DrawMapPoints()
     glBegin(GL_POINTS);
     glColor3f(1.0,0.0,0.0);
 
-    for(set<MapPoint*>::iterator sit=spRefMPs.begin(), send=spRefMPs.end(); sit!=send; sit++)
+    /* for(set<MapPoint*>::iterator sit=spRefMPs.begin(), send=spRefMPs.end(); sit!=send; sit++)
     {
         if((*sit)->isBad())
             continue;
         cv::Mat pos = (*sit)->GetWorldPos();
         glVertex3f(pos.at<float>(0),pos.at<float>(1),pos.at<float>(2));
 
-    }
+    } */
 
-    glEnd(); */
+    glEnd();
 }
 
 void MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph)
@@ -86,14 +86,14 @@ void MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph)
     const float h = w*0.75;
     const float z = w*0.6;
 
-    /* const vector<KeyFrame*> vpKFs = mpMap->GetAllKeyFrames();
+    const vector<Frame> vpKFs = mpMap->GetAllFrames();
 
     if(bDrawKF)
     {
         for(size_t i=0; i<vpKFs.size(); i++)
         {
-            KeyFrame* pKF = vpKFs[i];
-            cv::Mat Twc = pKF->GetPoseInverse().t();
+            Frame pKF = vpKFs[i];
+            cv::Mat Twc = pKF.GetPoseInverse().t();
 
             glPushMatrix();
 
@@ -126,7 +126,7 @@ void MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph)
 
             glPopMatrix();
         }
-    } */
+    }
 
     /* if(bDrawGraph)
     {

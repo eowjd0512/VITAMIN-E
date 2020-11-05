@@ -60,7 +60,10 @@ public:
     Frame mCurrentFrame, mPrevFrame;
     cv::Mat mImGray;
 
-
+    // Initialization Variables (Monocular)
+    std::vector<cv::Point3f> mvIniP3D;
+    Frame mInitialFrame;
+    
 private:
 
     // Main tracking function. It is independent of the input sensor.
@@ -69,6 +72,10 @@ private:
     void FeatureTrack();
 
     void UpdateMotionModel();
+    
+    void MonocularInitialization();
+
+    void CreateInitialMapMonocular(const vector<bool>& vbTriangulated, const vector<unsigned int>& pt_idx);
     
     //Feature
     FeatureExtractor* mpFeatureExtractor;
