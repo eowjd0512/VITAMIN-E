@@ -64,6 +64,14 @@ public:
     std::vector<cv::Point3f> mvIniP3D;
     Frame mInitialFrame;
     
+
+    //vitaminE main function
+    VitamineFunction* vitaFunc;
+
+
+    // Initalization (only for monocular)
+    Initializer* mpInitializer;
+
 private:
 
     // Main tracking function. It is independent of the input sensor.
@@ -79,9 +87,6 @@ private:
     
     //Feature
     FeatureExtractor* mpFeatureExtractor;
-
-    // Initalization (only for monocular)
-    Initializer* mpInitializer;
 
     //Other Thread Pointers
     Mapper* mpMapper;
@@ -106,9 +111,6 @@ private:
 
     //Feature matchinig
     Ptr<DescriptorMatcher> matcher;
-
-    //vitaminE main function
-    VitamineFunction* vitaFunc;
 
     //Color order (true RGB, false BGR, ignored if grayscale)
     bool mbRGB;

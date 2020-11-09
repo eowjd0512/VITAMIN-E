@@ -9,7 +9,7 @@ using namespace std;
 int main(int argc, char **argv)  
 {  
 
-    VideoCapture cap(0);  
+    VideoCapture cap(2);  
     if (!cap.isOpened())  
     {  
         cerr<<"cam open error"<<endl;  
@@ -19,11 +19,16 @@ int main(int argc, char **argv)
     VITAMINE::System vitamine(argv[1], visualizer);
 
     Mat frame; 
+    int i=0;
     while(true)  
     {  
 
         cap >> frame;  
         resize(frame, frame, Size(640,480));
+        //imshow("img", frame);
+        //std::string filename = "calib_img1"+to_string(i++)+".jpg";
+        //imwrite(filename, frame);
+        //waitKey(0);
         vitamine.Track(frame);
 
     }  

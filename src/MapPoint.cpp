@@ -2,6 +2,7 @@
 
 namespace VITAMINE
 {
+std::mutex MapPoint::mGlobalMutex;
 
 MapPoint::MapPoint(const cv::Mat &Pos)
 :mbBad(false){
@@ -20,4 +21,12 @@ cv::Mat MapPoint::GetWorldPos()
     std::unique_lock<std::mutex> lock(mMutexPos);
     return mWorldPos.clone();
 }
+
+void MapPoint::SetWorldPos(const cv::Mat &Pos)
+{
+    std::unique_lock<std::mutex> lock2(mGlobalMutex);
+    std::unique_lock<std::mutex> lock(mMutexPos);
+    Pos.copyTo(mWorldPos);
+}
+
 }//namespace VITAMINE

@@ -85,10 +85,10 @@ Frame::Frame(const cv::Mat &imGray, FeatureExtractor* extractor, cv::Mat &K, cv:
 
 void Frame::ExtractFeature(const cv::Mat &im)
 {
-    std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+    //std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
     mpFeatureExtractor->detect(im, mvKeys, mDescriptors, kappa);
-    std::chrono::duration<double> sec = std::chrono::system_clock::now() - start;
-    std::cout << "Feature Extraction time : " << sec.count() << " seconds" << std::endl;
+    //std::chrono::duration<double> sec = std::chrono::system_clock::now() - start;
+    //std::cout << "Feature Extraction time : " << sec.count() << " seconds" << std::endl;
 
 }
 

@@ -4,7 +4,7 @@
 #include<string>
 #include<thread>
 #include "opencv2/opencv.hpp"
-
+#include <mutex>
 
 namespace VITAMINE{
 
@@ -17,6 +17,10 @@ public:
     
     bool isBad();
     cv::Mat GetWorldPos();
+    void SetWorldPos(const cv::Mat &Pos);
+
+    static std::mutex mGlobalMutex;
+
 private:
 //cv::Mat
     cv::Mat mWorldPos;

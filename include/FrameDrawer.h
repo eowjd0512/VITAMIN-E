@@ -24,7 +24,7 @@
 #include "Tracker.h"
 #include "MapPoint.h"
 #include "Map.h"
-
+#include "Feature.h"
 #include<opencv2/core/core.hpp>
 #include<opencv2/features2d/features2d.hpp>
 
@@ -48,6 +48,9 @@ public:
     // Draw last processed frame.
     cv::Mat DrawFrame();
 
+
+    vector<Feature*> tf;
+    unsigned int initialFrame_id, currentFrame_id;
 protected:
 
     void DrawTextInfo(cv::Mat &im, int nState, cv::Mat &imText);

@@ -22,7 +22,7 @@ public:
     bool Initialize(const Frame &CurrentFrame, 
                 cv::Mat &R21, cv::Mat &t21, vector<cv::Point3f> &vP3D, vector<bool> &vbTriangulated, vector<unsigned int>& idx);
 
-
+    unsigned int initialFrame_idx;
 private:
 
     void FindHomography(vector<bool> &vbMatchesInliers, float &score, cv::Mat &H21);
@@ -52,7 +52,7 @@ private:
 
 
     VitamineFunction * mVitamineFunction;
-    unsigned int initialFrame_idx;
+    
 
     vector<Point> pt1, pt2;
 

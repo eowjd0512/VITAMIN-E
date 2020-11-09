@@ -33,7 +33,7 @@ void Viewer::Run()
     mbFinished = false;
     mbStopped = false;
 
-    pangolin::CreateWindowAndBind("ORB-SLAM2: Map Viewer",1024,768);
+    pangolin::CreateWindowAndBind("ORB-SLAM2: Map Viewer",1024*2,768*2);
 
     // 3D Mouse handler requires depth testing to be enabled
     glEnable(GL_DEPTH_TEST);
@@ -111,10 +111,10 @@ void Viewer::Run()
 
         pangolin::FinishFrame();
 
-        /* cv::Mat im = mpFrameDrawer->DrawFrame();
+        cv::Mat im = mpFrameDrawer->DrawFrame();
         cv::imshow("ORB-SLAM2: Current Frame",im);
         cv::imwrite("Image/"+std::to_string(i)+".png",im);
-        cv::waitKey(mT); */
+        cv::waitKey(mT);
 
         if(menuReset)
         {

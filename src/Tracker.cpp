@@ -63,13 +63,13 @@ namespace VITAMINE
 
         // Load feature extraction parameters
 
-        /* int nFeatures = fSettings["ORBextractor.nFeatures"];
-        float fScaleFactor = fSettings["ORBextractor.scaleFactor"];
+        int nFeatures = fSettings["ORBextractor.nFeatures"];
+        /* float fScaleFactor = fSettings["ORBextractor.scaleFactor"];
         int nLevels = fSettings["ORBextractor.nLevels"];
         int fIniThFAST = fSettings["ORBextractor.iniThFAST"];
         int fMinThFAST = fSettings["ORBextractor.minThFAST"]; */
 
-        mpFeatureExtractor = new FeatureExtractor();
+        mpFeatureExtractor = new FeatureExtractor(nFeatures);
         vitaFunc = new VitamineFunction();
         matcher = DescriptorMatcher::create(DescriptorMatcher::FLANNBASED);
         /* cout << endl  << "Feature Extractor Parameters: " << endl;
@@ -120,7 +120,7 @@ namespace VITAMINE
         {
             mState = NOT_INITIALIZED;
         }
-    
+        mLastProcessedState=mState;
         //TODO:feature track
         FeatureTrack();
         
@@ -129,7 +129,7 @@ namespace VITAMINE
 
          if(mState==NOT_INITIALIZED)
         {
-
+            
             MonocularInitialization();
 
             mpFrameDrawer->Update(this);
@@ -247,7 +247,7 @@ namespace VITAMINE
                 if(mpInitializer)
                     delete mpInitializer;
 
-                mpInitializer =  new Initializer(mCurrentFrame,1.0,200, vitaFunc);
+                mpInitializer =  new Initializer(mCurrentFrame,1.0,500, vitaFunc);
 
                 //fill(mvIniMatches.begin(),mvIniMatches.end(),-1);
 
@@ -257,7 +257,7 @@ namespace VITAMINE
         else
         {
             int nmatches = vitaFunc->getTrackedFeatureNum(mInitialFrame.mnId);
-            cout<<"tracked num: "<<nmatches<<endl;
+            
             // Try to initialize
             if(nmatches<=100)
             {
@@ -320,6 +320,8 @@ namespace VITAMINE
         mpMap->AddFrame(mCurrentFrame);
 
         // Create MapPoints and asscoiate to keyframes
+        
+        float medianDepth = 0;
         for(size_t i=0; i<pt_idx.size();i++)
         {
             if(!vbTriangulated[i])
@@ -327,9 +329,8 @@ namespace VITAMINE
 
             //Create MapPoint.
             cv::Mat worldPos(mvIniP3D[i]);
-            cout<<worldPos<<endl;
             MapPoint* pMP = new MapPoint(worldPos);
-
+            medianDepth += worldPos.at<float>(2);
             //pKFini->AddMapPoint(pMP,i);
             //pKFcur->AddMapPoint(pMP,mvIniMatches[i]);
 
@@ -347,7 +348,7 @@ namespace VITAMINE
             mpMap->AddMapPoint(pMP);
             vitaFunc->AddMapPoint(pMP,pt_idx[i]);
         }
-
+        
         // Update Connections
         //pKFini->UpdateConnections();
         //pKFcur->UpdateConnections();
@@ -358,27 +359,27 @@ namespace VITAMINE
 
         // Bundle Adjustment
         cout << "New Map created with " << mpMap->MapPointsInMap() << " points" << endl;
-
+        medianDepth/=(float)mpMap->MapPointsInMap();
         //Optimizer::GlobalBundleAdjustemnt(mpMap,20);
 
         // Set median depth to 1
         //float medianDepth = pKFini->ComputeSceneMedianDepth(2);
-        //float invMedianDepth = 1.0f/medianDepth;
+        float invMedianDepth = 1.0f/medianDepth;
 
-        /* if(medianDepth<0 || pKFcur->TrackedMapPoints(1)<100)
+        if(medianDepth<0)// || pKFcur->TrackedMapPoints(1)<100)
         {
             cout << "Wrong initialization, reseting..." << endl;
             Reset();
             return;
-        } */
+        }
 
         // Scale initial baseline
-        /* cv::Mat Tc2w = pKFcur->GetPose();
+         cv::Mat Tc2w = mCurrentFrame.GetPose();
         Tc2w.col(3).rowRange(0,3) = Tc2w.col(3).rowRange(0,3)*invMedianDepth;
-        pKFcur->SetPose(Tc2w);
-
+        mCurrentFrame.SetPose(Tc2w);
+        
         // Scale points
-        vector<MapPoint*> vpAllMapPoints = pKFini->GetMapPointMatches();
+        vector<MapPoint*> vpAllMapPoints = mpMap->GetAllMapPoints();
         for(size_t iMP=0; iMP<vpAllMapPoints.size(); iMP++)
         {
             if(vpAllMapPoints[iMP])
@@ -386,7 +387,7 @@ namespace VITAMINE
                 MapPoint* pMP = vpAllMapPoints[iMP];
                 pMP->SetWorldPos(pMP->GetWorldPos()*invMedianDepth);
             }
-        } */
+        }
 
         //mpLocalMapper->InsertKeyFrame(pKFini);
         //mpLocalMapper->InsertKeyFrame(pKFcur);
@@ -458,11 +459,11 @@ namespace VITAMINE
         
         vitaFunc->loadConsecutiveFrames(&mPrevFrame, &mCurrentFrame);
 
-        std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+        //std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
         vitaFunc->getDominantMotion(good_matches);
         vitaFunc->vitaTrack();
-        std::chrono::duration<double> sec = std::chrono::system_clock::now() - start;
-        std::cout << "Tracking time : " << sec.count() << " seconds" << std::endl;
+        //std::chrono::duration<double> sec = std::chrono::system_clock::now() - start;
+        //std::cout << "Tracking time : " << sec.count() << " seconds" << std::endl;
 
         vitaFunc->addResidualFeatures(2);
         vitaFunc->drawTrackingFeatures();

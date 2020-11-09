@@ -77,13 +77,18 @@ cv::Mat FrameDrawer::DrawFrame()
     //Draw
     if(state==Tracker::NOT_INITIALIZED) //INITIALIZING
     {
-        for(unsigned int i=0; i<vMatches.size(); i++)
+
+        for(unsigned int i=0; i<tf.size(); i++)
         {
-            if(vMatches[i]>=0)
+            if(tf[i]->pt_history.count(initialFrame_id)){
+                cv::line(im,tf[i]->pt_history[initialFrame_id],tf[i]->pt_history[currentFrame_id],
+                        cv::Scalar(0,255,0));
+            }
+            /* if(vMatches[i]>=0)
             {
                 cv::line(im,vIniKeys[i].pt,vCurrentKeys[vMatches[i]].pt,
                         cv::Scalar(0,255,0));
-            }
+            } */
         }        
     }
     else if(state==Tracker::OK) //Tracker
@@ -175,12 +180,21 @@ void FrameDrawer::Update(Tracker *pTracker)
     //mbOnlyTracking = pTracker->mbOnlyTracking;
 
 
-    /* if(pTracker->mLastProcessedState==Tracker::NOT_INITIALIZED)
+    if(pTracker->mLastProcessedState==Tracker::NOT_INITIALIZED)
     {
-        mvIniKeys=pTracker->mInitialFrame.mvKeys;
-        mvIniMatches=pTracker->mvIniMatches;
+        //mvIniKeys=pTracker->mInitialFrame.mvKeys;
+        //mvIniMatches=pTracker->mvIniMatches;
+
+        tf = pTracker->vitaFunc->tf;
+
+        currentFrame_id = pTracker->mCurrentFrame.mnId;
+        if(pTracker->mpInitializer)
+            initialFrame_id = pTracker->mpInitializer->initialFrame_idx;
+        else
+            initialFrame_id = currentFrame_id;
+        
     }
-    else if(pTracker->mLastProcessedState==Tracker::OK)
+    /* else if(pTracker->mLastProcessedState==Tracker::OK)
     {
         for(int i=0;i<N;i++)
         {

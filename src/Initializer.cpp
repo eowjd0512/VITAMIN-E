@@ -43,12 +43,12 @@ namespace VITAMINE
         // Generate sets of 8 points for each RANSAC iteration
         mvSets = vector< vector<size_t> >(mMaxIterations,vector<size_t>(8,0));
 
-        std::random_device rd;
+        
         
         for(int it=0; it<mMaxIterations; it++)
-        {
+        {   
             vAvailableIndices = vAllIndices;
-
+            std::random_device rd;
             std::mt19937 gen(rd());
             std::uniform_int_distribution<int> dis(0, vAvailableIndices.size()-1);
 
@@ -57,7 +57,7 @@ namespace VITAMINE
             {   
 
                 int randi = dis(gen); 
-                
+
                 int idx = vAvailableIndices[randi];
 
                 mvSets[it][j] = idx;
@@ -65,6 +65,7 @@ namespace VITAMINE
                 vAvailableIndices[randi] = vAvailableIndices.back();
                 vAvailableIndices.pop_back();
             }
+ 
         }
 
         // Launch threads to compute in parallel a fundamental matrix and a homography
@@ -84,9 +85,9 @@ namespace VITAMINE
         
         // Try to reconstruct from homography or fundamental depending on the ratio (0.40-0.45)
         if(RH>0.40)
-            return ReconstructH(vbMatchesInliersH,H,mK,R21,t21,vP3D,vbTriangulated,1.0,50);
+            return ReconstructH(vbMatchesInliersH,H,mK,R21,t21,vP3D,vbTriangulated,0,50);
         else //if(pF_HF>0.6)
-            return ReconstructF(vbMatchesInliersF,F,mK,R21,t21,vP3D,vbTriangulated,1.0,50);
+            return ReconstructF(vbMatchesInliersF,F,mK,R21,t21,vP3D,vbTriangulated,0,50);
 
         return false;
     }
@@ -440,6 +441,7 @@ namespace VITAMINE
     bool Initializer::ReconstructF(vector<bool> &vbMatchesInliers, cv::Mat &F21, cv::Mat &K,
                                 cv::Mat &R21, cv::Mat &t21, vector<cv::Point3f> &vP3D, vector<bool> &vbTriangulated, float minParallax, int minTriangulated)
     {
+
         int N=0;
         for(size_t i=0, iend = vbMatchesInliers.size() ; i<iend; i++)
             if(vbMatchesInliers[i])
@@ -461,11 +463,11 @@ namespace VITAMINE
         vector<bool> vbTriangulated1,vbTriangulated2,vbTriangulated3, vbTriangulated4;
         float parallax1,parallax2, parallax3, parallax4;
 
-        int nGood1 = CheckRT(R1,t1,pt1,pt2,vbMatchesInliers,K, vP3D1, 4.0*mSigma2, vbTriangulated1, parallax1);
-        int nGood2 = CheckRT(R2,t1,pt1,pt2,vbMatchesInliers,K, vP3D2, 4.0*mSigma2, vbTriangulated2, parallax2);
-        int nGood3 = CheckRT(R1,t2,pt1,pt2,vbMatchesInliers,K, vP3D3, 4.0*mSigma2, vbTriangulated3, parallax3);
-        int nGood4 = CheckRT(R2,t2,pt1,pt2,vbMatchesInliers,K, vP3D4, 4.0*mSigma2, vbTriangulated4, parallax4);
-
+        int nGood1 = CheckRT(R1,t1,pt1,pt2,vbMatchesInliers,K, vP3D1, 4.0, vbTriangulated1, parallax1);
+        int nGood2 = CheckRT(R2,t1,pt1,pt2,vbMatchesInliers,K, vP3D2, 4.0, vbTriangulated2, parallax2);
+        int nGood3 = CheckRT(R1,t2,pt1,pt2,vbMatchesInliers,K, vP3D3, 4.0, vbTriangulated3, parallax3);
+        int nGood4 = CheckRT(R2,t2,pt1,pt2,vbMatchesInliers,K, vP3D4, 4.0, vbTriangulated4, parallax4);
+  
         int maxGood = max(nGood1,max(nGood2,max(nGood3,nGood4)));
 
         R21 = cv::Mat();
@@ -670,7 +672,7 @@ namespace VITAMINE
             float parallaxi;
             vector<cv::Point3f> vP3Di;
             vector<bool> vbTriangulatedi;
-            int nGood = CheckRT(vR[i], vt[i], pt1, pt2, vbMatchesInliers,K,vP3Di, 4.0*mSigma2, vbTriangulatedi, parallaxi);
+            int nGood = CheckRT(vR[i], vt[i], pt1, pt2, vbMatchesInliers,K,vP3Di, 4.0, vbTriangulatedi, parallaxi);
 
             if(nGood>bestGood)
             {
@@ -810,6 +812,7 @@ namespace VITAMINE
             if(!isfinite(p3dC1.at<float>(0)) || !isfinite(p3dC1.at<float>(1)) || !isfinite(p3dC1.at<float>(2)))
             {
                 vbGood[i]=false;
+                cerr<<"err1"<<endl;
                 continue;
             }
 
@@ -823,14 +826,20 @@ namespace VITAMINE
             float cosParallax = normal1.dot(normal2)/(dist1*dist2);
 
             // Check depth in front of first camera (only if enough parallax, as "infinite" points can easily go to negative depth)
-            if(p3dC1.at<float>(2)<=0 && cosParallax<0.99998)
+            if(p3dC1.at<float>(2)<=0 && cosParallax<0.99998){
+                //cerr<<"err2"<<endl;
                 continue;
+            }
+                
 
             // Check depth in front of second camera (only if enough parallax, as "infinite" points can easily go to negative depth)
             cv::Mat p3dC2 = R*p3dC1+t;
 
             if(p3dC2.at<float>(2)<=0 && cosParallax<0.99998)
+            {
+                //cerr<<"err3"<<endl;
                 continue;
+            }
 
             // Check reprojection error in first image
             float im1x, im1y;
@@ -841,7 +850,10 @@ namespace VITAMINE
             float squareError1 = (im1x-kp1.x)*(im1x-kp1.x)+(im1y-kp1.y)*(im1y-kp1.y);
 
             if(squareError1>th2)
+            {
+                //cerr<<squareError1<<endl;
                 continue;
+            }
 
             // Check reprojection error in second image
             float im2x, im2y;
@@ -852,7 +864,10 @@ namespace VITAMINE
             float squareError2 = (im2x-kp2.x)*(im2x-kp2.x)+(im2y-kp2.y)*(im2y-kp2.y);
 
             if(squareError2>th2)
+            {
+                cerr<<"err5"<<endl;
                 continue;
+            }
 
             vCosParallax.push_back(cosParallax);
             vP3D[i] = cv::Point3f(p3dC1.at<float>(0),p3dC1.at<float>(1),p3dC1.at<float>(2));
