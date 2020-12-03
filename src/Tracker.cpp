@@ -359,9 +359,12 @@ namespace VITAMINE
 
         // Bundle Adjustment
         cout << "New Map created with " << mpMap->MapPointsInMap() << " points" << endl;
-        medianDepth/=(float)mpMap->MapPointsInMap();
-        //Optimizer::GlobalBundleAdjustemnt(mpMap,20);
+        
 
+        Optimizer::GlobalBundleAdjustemnt(mpMap,20);
+
+        medianDepth/=(float)mpMap->MapPointsInMap();
+        
         // Set median depth to 1
         //float medianDepth = pKFini->ComputeSceneMedianDepth(2);
         float invMedianDepth = 1.0f/medianDepth;

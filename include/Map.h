@@ -29,7 +29,8 @@ public:
     std::vector<MapPoint*> GetAllMapPoints();
 
     std::mutex mMutexMapUpdate;
-
+    // This avoid that two points are created simultaneously in separate threads (id conflict)
+    std::mutex mMutexPointCreation;
 private:
 
     long unsigned int mnMaxKFid;

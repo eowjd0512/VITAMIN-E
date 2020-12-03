@@ -19,7 +19,7 @@ Frame::Frame(const Frame &frame)
      mDescriptors(frame.mDescriptors.clone()), //mtrackedKeyDescriptors(frame.mtrackedKeyDescriptors.clone()),
      kappa(frame.kappa),
      mvpMapPoints(frame.mvpMapPoints), mvbOutlier(frame.mvbOutlier), mnId(frame.mnId),
-     img(frame.img.clone())
+     img(frame.img.clone()), mbBad(false)
 {
     for(int i=0;i<FRAME_GRID_COLS;i++)
         for(int j=0; j<FRAME_GRID_ROWS; j++)
@@ -30,7 +30,7 @@ Frame::Frame(const Frame &frame)
 }
 
 Frame::Frame(const cv::Mat &imGray, FeatureExtractor* extractor, cv::Mat &K, cv::Mat &distCoef)
-    :mpFeatureExtractor(extractor), mK(K.clone()), mDistCoef(distCoef.clone()), img(imGray.clone())
+    :mpFeatureExtractor(extractor), mK(K.clone()), mDistCoef(distCoef.clone()), img(imGray.clone()), mbBad(false)
 {
     // Frame ID
     mnId=nNextId++;
@@ -85,6 +85,7 @@ Frame::Frame(const cv::Mat &imGray, FeatureExtractor* extractor, cv::Mat &K, cv:
 
 void Frame::ExtractFeature(const cv::Mat &im)
 {
+    //std::unique_lock<std::mutex> lock(mMutexFeatures);
     //std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
     mpFeatureExtractor->detect(im, mvKeys, mDescriptors, kappa);
     //std::chrono::duration<double> sec = std::chrono::system_clock::now() - start;
@@ -100,13 +101,13 @@ void Frame::SetPose(cv::Mat Tcw)
 
 cv::Mat Frame::GetPose()
 {
-    //unique_lock<mutex> lock(mMutexPose);
+    unique_lock<mutex> lock(mMutexPose);
     return mTcw.clone();
 }
 
 cv::Mat Frame::GetPoseInverse()
 {
-    //unique_lock<mutex> lock(mMutexPose);
+    unique_lock<mutex> lock(mMutexPose);
     return mTwc.clone();
 }
 
@@ -225,4 +226,9 @@ void Frame::ComputeImageBounds(const cv::Mat &imLeft)
     }
 }
 
+bool Frame::isBad()
+{
+    std::unique_lock<std::mutex> lock(mMutexConnections);
+    return mbBad;
+}
 }//namespace VITAMINE

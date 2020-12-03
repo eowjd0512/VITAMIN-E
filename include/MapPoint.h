@@ -20,6 +20,8 @@ public:
     void SetWorldPos(const cv::Mat &Pos);
 
     static std::mutex mGlobalMutex;
+    long unsigned int mnId;
+    static long unsigned int nNextId;
 
 private:
 //cv::Mat

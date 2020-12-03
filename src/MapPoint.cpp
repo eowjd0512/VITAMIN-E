@@ -1,12 +1,17 @@
 #include "MapPoint.h"
-
+#include <mutex>
 namespace VITAMINE
 {
 std::mutex MapPoint::mGlobalMutex;
+long unsigned int MapPoint::nNextId=0;
 
 MapPoint::MapPoint(const cv::Mat &Pos)
 :mbBad(false){
     Pos.copyTo(mWorldPos);
+
+    // MapPoints can be created from Tracking and Local Mapping. This mutex avoid conflicts with id.
+    std::unique_lock<std::mutex> lock(mpMap->mMutexPointCreation);
+    mnId=nNextId++;
 }
 
 bool MapPoint::isBad()

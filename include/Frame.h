@@ -104,7 +104,7 @@ public:
 
     // Compute the cell of a point for feature tracking (return false if outside the grid)
     bool PosInGrid(const cv::Point &p, int &posX, int &posY);
-
+    bool isBad();
 protected:
     // Undistort keypoints given OpenCV distortion parameters.
     // Only for the RGB-D case. Stereo must be already rectified!
@@ -120,13 +120,17 @@ protected:
     // Compute the cell of a keypoint (return false if outside the grid)
     bool PosInGrid(const cv::KeyPoint &kp, int &posX, int &posY);
 
+    bool mbBad;
+    
     // Rotation, translation and camera center
     cv::Mat mRcw;
     cv::Mat mtcw;
     cv::Mat mRwc;
     cv::Mat mOw; //==mtwc
 
-    //std::mutex mMutexPose;
+    std::mutex mMutexPose;
+    std::mutex mMutexConnections;
+    std::mutex mMutexFeatures;
 };
 
 }//namespace VITAMINE
