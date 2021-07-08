@@ -30,7 +30,7 @@ This project was started to re-produce the paper
 - Architecture construction
 - Local extrema feature extraction and curvature tracking
 - Initialization
-- 
+
 [TODO]
 - Implementation of Subspace Gauss-Newton Method
 
