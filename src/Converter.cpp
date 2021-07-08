@@ -34,7 +34,7 @@ std::vector<cv::Mat> Converter::toDescriptorVector(const cv::Mat &Descriptors)
     return vDesc;
 }
 
-SE3Quat Converter::toSE3Quat(const cv::Mat &cvT)
+/* SE3Quat Converter::toSE3Quat(const cv::Mat &cvT)
 {
     Eigen::Matrix<double,3,3> R;
     R << cvT.at<float>(0,0), cvT.at<float>(0,1), cvT.at<float>(0,2),
@@ -44,15 +44,41 @@ SE3Quat Converter::toSE3Quat(const cv::Mat &cvT)
     Eigen::Matrix<double,3,1> t(cvT.at<float>(0,3), cvT.at<float>(1,3), cvT.at<float>(2,3));
 
     return SE3Quat(R,t);
+} */
+
+g2o::SE3Quat Converter::toSE3Quat(const cv::Mat &cvT)
+{
+    Eigen::Matrix<double,3,3> R;
+    R << cvT.at<float>(0,0), cvT.at<float>(0,1), cvT.at<float>(0,2),
+         cvT.at<float>(1,0), cvT.at<float>(1,1), cvT.at<float>(1,2),
+         cvT.at<float>(2,0), cvT.at<float>(2,1), cvT.at<float>(2,2);
+
+    Eigen::Matrix<double,3,1> t(cvT.at<float>(0,3), cvT.at<float>(1,3), cvT.at<float>(2,3));
+
+    return g2o::SE3Quat(R,t);
 }
 
-cv::Mat Converter::toCvMat( SE3Quat &SE3)
+/* cv::Mat Converter::toCvMat( SE3Quat &SE3)
+{
+    Eigen::Matrix<double,4,4> eigMat = SE3.to_homogeneous_matrix();
+    return toCvMat(eigMat);
+} */
+
+cv::Mat Converter::toCvMat( g2o::SE3Quat &SE3)
 {
     Eigen::Matrix<double,4,4> eigMat = SE3.to_homogeneous_matrix();
     return toCvMat(eigMat);
 }
 
-cv::Mat Converter::toCvMat(Sim3 &Sim3_)
+/* cv::Mat Converter::toCvMat(Sim3 &Sim3_)
+{
+    Eigen::Matrix3d eigR = Sim3_.rotation().toRotationMatrix();
+    Eigen::Vector3d eigt = Sim3_.translation();
+    double s = Sim3_.scale();
+    return toCvSE3(s*eigR,eigt);
+} */
+
+cv::Mat Converter::toCvMat(g2o::Sim3 &Sim3_)
 {
     Eigen::Matrix3d eigR = Sim3_.rotation().toRotationMatrix();
     Eigen::Vector3d eigt = Sim3_.translation();

@@ -57,12 +57,13 @@ public:
     eTrackingState mLastProcessedState;
 
     // Current & Previous Frame
-    Frame mCurrentFrame, mPrevFrame;
+    Frame* mCurrentFrame;
+    Frame* mPrevFrame;
     cv::Mat mImGray;
 
     // Initialization Variables (Monocular)
     std::vector<cv::Point3f> mvIniP3D;
-    Frame mInitialFrame;
+    Frame* mInitialFrame;
     
 
     //vitaminE main function

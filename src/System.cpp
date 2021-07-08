@@ -69,8 +69,8 @@ namespace VITAMINE
 
         unique_lock<mutex> lock2(mMutexState);
         mTrackingState = mpTracker->mState;
-        mTrackedMapPoints = mpTracker->mCurrentFrame.mvpMapPoints;
-        mTrackedKeyPointsUn = mpTracker->mCurrentFrame.mvKeysUn;
+        mTrackedMapPoints = mpTracker->mCurrentFrame->mvpMapPoints;
+        mTrackedKeyPointsUn = mpTracker->mCurrentFrame->mvKeysUn;
 
         return Tcw;
 

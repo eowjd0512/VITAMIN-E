@@ -1,4 +1,5 @@
 #include "Tracker.h"
+#include "Optimizer.h"
 #include <chrono>
 
 namespace VITAMINE
@@ -64,12 +65,12 @@ namespace VITAMINE
         // Load feature extraction parameters
 
         int nFeatures = fSettings["ORBextractor.nFeatures"];
-        /* float fScaleFactor = fSettings["ORBextractor.scaleFactor"];
+        float fScaleFactor = fSettings["ORBextractor.scaleFactor"];
         int nLevels = fSettings["ORBextractor.nLevels"];
         int fIniThFAST = fSettings["ORBextractor.iniThFAST"];
-        int fMinThFAST = fSettings["ORBextractor.minThFAST"]; */
+        int fMinThFAST = fSettings["ORBextractor.minThFAST"];
 
-        mpFeatureExtractor = new FeatureExtractor(nFeatures);
+        mpFeatureExtractor = new FeatureExtractor();
         vitaFunc = new VitamineFunction();
         matcher = DescriptorMatcher::create(DescriptorMatcher::FLANNBASED);
         /* cout << endl  << "Feature Extractor Parameters: " << endl;
@@ -102,17 +103,24 @@ namespace VITAMINE
 
         //generate frame
         // detect feature every frame
-        mCurrentFrame = Frame(mImGray,mpFeatureExtractor,mK,mDistCoef);
+        std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+        
+        mCurrentFrame = new Frame(mImGray,mpFeatureExtractor,mK,mDistCoef);
+
+        std::chrono::duration<double> sec = std::chrono::system_clock::now() - start;
+        std::cout << "feature extraction time : " << sec.count() << " seconds" << std::endl;
+        
+
         Track();
 
-        return mCurrentFrame.mTcw.clone();
+        return mCurrentFrame->mTcw.clone();
     }
 
     void Tracker::Track()
     {
         //TODO: return if the first frame
         if (firstFrame){
-            mPrevFrame = Frame(mCurrentFrame);
+            mPrevFrame = new Frame(*mCurrentFrame);
             firstFrame = false;
             return;
         }
@@ -133,7 +141,7 @@ namespace VITAMINE
             MonocularInitialization();
 
             mpFrameDrawer->Update(this);
-            mPrevFrame = Frame(mCurrentFrame);
+            mPrevFrame = new Frame(*mCurrentFrame);
 
             if(mState!=OK)
                 return;
@@ -227,7 +235,7 @@ namespace VITAMINE
             
         } */
 
-        mPrevFrame = Frame(mCurrentFrame);
+        mPrevFrame = new Frame(*mCurrentFrame);
     }
 
     void Tracker::MonocularInitialization()
@@ -238,7 +246,7 @@ namespace VITAMINE
             // Set Reference Frame
             if(vitaFunc->tf.size()>100)
             {
-                mInitialFrame = Frame(mCurrentFrame);
+                mInitialFrame = new Frame(*mCurrentFrame);
                 //mLastFrame = Frame(mCurrentFrame);
                 /* mvbPrevMatched.resize(mCurrentFrame.mvKeysUn.size());
                 for(size_t i=0; i<mCurrentFrame.mvKeysUn.size(); i++)
@@ -256,7 +264,7 @@ namespace VITAMINE
         }
         else
         {
-            int nmatches = vitaFunc->getTrackedFeatureNum(mInitialFrame.mnId);
+            int nmatches = vitaFunc->getTrackedFeatureNum(mInitialFrame->mnId);
             
             // Try to initialize
             if(nmatches<=100)
@@ -276,7 +284,14 @@ namespace VITAMINE
             cv::Mat tcw; // Current Camera Translation
             vector<bool> vbTriangulated; // Triangulated Correspondences (mvIniMatches)
             vector<unsigned int> idx;
-            if(mpInitializer->Initialize(mCurrentFrame, Rcw, tcw, mvIniP3D, vbTriangulated, idx))
+
+            std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+            bool ini = mpInitializer->Initialize(mCurrentFrame, Rcw, tcw, mvIniP3D, vbTriangulated, idx);
+            std::chrono::duration<double> sec = std::chrono::system_clock::now() - start;
+            std::cout << "initialization time : " << sec.count() << " seconds" << std::endl;
+        
+
+            if(ini)
             {
                 cout<<"here?"<<endl;
                 /* for(size_t i=0, iend=mvIniMatches.size(); i<iend;i++)
@@ -289,11 +304,11 @@ namespace VITAMINE
                 } */
 
                 // Set Frame Poses
-                mInitialFrame.SetPose(cv::Mat::eye(4,4,CV_32F));
+                mInitialFrame->SetPose(cv::Mat::eye(4,4,CV_32F));
                 cv::Mat Tcw = cv::Mat::eye(4,4,CV_32F);
                 Rcw.copyTo(Tcw.rowRange(0,3).colRange(0,3));
                 tcw.copyTo(Tcw.rowRange(0,3).col(3));
-                mCurrentFrame.SetPose(Tcw);
+                mCurrentFrame->SetPose(Tcw);
 
                 int cnt=0;
                 for(auto i=0; i<vbTriangulated.size(); i++){
@@ -329,13 +344,17 @@ namespace VITAMINE
 
             //Create MapPoint.
             cv::Mat worldPos(mvIniP3D[i]);
-            MapPoint* pMP = new MapPoint(worldPos);
+            MapPoint* pMP = new MapPoint(worldPos, mCurrentFrame, mpMap);
             medianDepth += worldPos.at<float>(2);
-            //pKFini->AddMapPoint(pMP,i);
-            //pKFcur->AddMapPoint(pMP,mvIniMatches[i]);
+            
+            auto prjPointIdx_initialFrame = vitaFunc->getPointIdx(mInitialFrame->mnId, i);
+            auto prjPointIdx_currentFrame = vitaFunc->getPointIdx(mCurrentFrame->mnId, i);
+            
+            mInitialFrame->AddMapPoint(pMP, prjPointIdx_initialFrame);
+            mCurrentFrame->AddMapPoint(pMP,prjPointIdx_currentFrame);
 
-            //pMP->AddObservation(mInitialFrame.mnId,i);
-            //pMP->AddObservation(mCurrentFrame.mnId,mvIniMatches[i]);
+            pMP->AddObservation(mInitialFrame, prjPointIdx_initialFrame);
+            pMP->AddObservation(mCurrentFrame, prjPointIdx_currentFrame);
 
             //pMP->ComputeDistinctiveDescriptors();
             //pMP->UpdateNormalAndDepth();
@@ -353,18 +372,21 @@ namespace VITAMINE
         //pKFini->UpdateConnections();
         //pKFcur->UpdateConnections();
 
-        cout<<mInitialFrame.mTcw<<endl;
-        cout<<mCurrentFrame.mTcw<<endl;
+        cout<<mInitialFrame->mTcw<<endl;
+        cout<<mCurrentFrame->mTcw<<endl;
         
 
         // Bundle Adjustment
         cout << "New Map created with " << mpMap->MapPointsInMap() << " points" << endl;
+        //sleep(1000);
+        Optimizer optimizer;
+        optimizer.G2O_GlobalBundleAdjustemnt(mpMap,20);
+
+        cout<<"done?"<<endl;
         
-
-        Optimizer::GlobalBundleAdjustemnt(mpMap,20);
-
         medianDepth/=(float)mpMap->MapPointsInMap();
         
+
         // Set median depth to 1
         //float medianDepth = pKFini->ComputeSceneMedianDepth(2);
         float invMedianDepth = 1.0f/medianDepth;
@@ -377,12 +399,12 @@ namespace VITAMINE
         }
 
         // Scale initial baseline
-         cv::Mat Tc2w = mCurrentFrame.GetPose();
+        /*  cv::Mat Tc2w = mCurrentFrame->GetPose();
         Tc2w.col(3).rowRange(0,3) = Tc2w.col(3).rowRange(0,3)*invMedianDepth;
-        mCurrentFrame.SetPose(Tc2w);
+        mCurrentFrame->SetPose(Tc2w); */
         
         // Scale points
-        vector<MapPoint*> vpAllMapPoints = mpMap->GetAllMapPoints();
+        /* vector<MapPoint*> vpAllMapPoints = mpMap->GetAllMapPoints();
         for(size_t iMP=0; iMP<vpAllMapPoints.size(); iMP++)
         {
             if(vpAllMapPoints[iMP])
@@ -390,7 +412,7 @@ namespace VITAMINE
                 MapPoint* pMP = vpAllMapPoints[iMP];
                 pMP->SetWorldPos(pMP->GetWorldPos()*invMedianDepth);
             }
-        }
+        } */
 
         //mpLocalMapper->InsertKeyFrame(pKFini);
         //mpLocalMapper->InsertKeyFrame(pKFcur);
@@ -409,11 +431,12 @@ namespace VITAMINE
 
         //mpMap->SetReferenceMapPoints(mvpLocalMapPoints);
 
-        mpMapDrawer->SetCurrentCameraPose(mCurrentFrame.GetPose());
+        mpMapDrawer->SetCurrentCameraPose(mCurrentFrame->GetPose());
 
         //mpMap->mvpKeyFrameOrigins.push_back(pKFini);
 
         mState=OK;
+        sleep(1000);
     }
 
     void Tracker::UpdateMotionModel(){
@@ -430,25 +453,29 @@ namespace VITAMINE
     }
     void Tracker::FeatureTrack(){
         //TODO:
-        std::vector< std::vector<DMatch> > knn_matches;
+        std::vector< std::vector<DMatch> > knn_matches12, knn_matches21;
         //cout<<mCurrentFrame.mDescriptors<<endl;
-        if(mPrevFrame.mDescriptors.type()!=CV_32F) {
-            mPrevFrame.mDescriptors.convertTo(mPrevFrame.mDescriptors, CV_32F);
+        if(mPrevFrame->mBRIEFDescriptors.type()!=CV_32F) {
+            mPrevFrame->mBRIEFDescriptors.convertTo(mPrevFrame->mBRIEFDescriptors, CV_32F);
         }
 
-        if(mCurrentFrame.mDescriptors.type()!=CV_32F) {
-            mCurrentFrame.mDescriptors.convertTo(mCurrentFrame.mDescriptors, CV_32F);
+        if(mCurrentFrame->mBRIEFDescriptors.type()!=CV_32F) {
+            mCurrentFrame->mBRIEFDescriptors.convertTo(mCurrentFrame->mBRIEFDescriptors, CV_32F);
         }
-        matcher->knnMatch( mPrevFrame.mDescriptors, mCurrentFrame.mDescriptors, knn_matches, 2 );
-
+        
+        matcher->knnMatch( mPrevFrame->mBRIEFDescriptors, mCurrentFrame->mBRIEFDescriptors, knn_matches12, 2 );
+        matcher->knnMatch( mCurrentFrame->mBRIEFDescriptors, mPrevFrame->mBRIEFDescriptors, knn_matches21, 2 );
         //-- Filter matches using the Lowe's ratio test
-        const float ratio_thresh = 0.7f;
+        const float ratio_thresh = 0.8f;
         std::vector<DMatch> good_matches;
-        for (size_t i = 0; i < knn_matches.size(); i++)
+        for (size_t i = 0; i < knn_matches12.size(); i++)
         {
-            if (knn_matches[i][0].distance < ratio_thresh * knn_matches[i][1].distance)
+            if (knn_matches12[i][0].distance < ratio_thresh * knn_matches12[i][1].distance &&
+                knn_matches21[knn_matches12[i][0].trainIdx][0].distance < ratio_thresh * 
+                knn_matches21[knn_matches12[i][0].trainIdx][1].distance)
             {
-                good_matches.push_back(knn_matches[i][0]);
+                if(knn_matches21[knn_matches12[i][0].trainIdx][0].trainIdx == knn_matches12[i][0].queryIdx)
+                good_matches.push_back(knn_matches12[i][0]);
             }
         }
         
@@ -460,16 +487,18 @@ namespace VITAMINE
         imshow("Good Matches", img_matches ); 
         waitKey(30); */
         
-        vitaFunc->loadConsecutiveFrames(&mPrevFrame, &mCurrentFrame);
-
-        //std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+        vitaFunc->loadConsecutiveFrames(mPrevFrame, mCurrentFrame);
+        
+        std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
         vitaFunc->getDominantMotion(good_matches);
+        
         vitaFunc->vitaTrack();
-        //std::chrono::duration<double> sec = std::chrono::system_clock::now() - start;
-        //std::cout << "Tracking time : " << sec.count() << " seconds" << std::endl;
+        
+        std::chrono::duration<double> sec = std::chrono::system_clock::now() - start;
+        std::cout << "featuer tracking time : " << sec.count() << " seconds" << std::endl;
 
         vitaFunc->addResidualFeatures(2);
-        vitaFunc->drawTrackingFeatures();
+        //vitaFunc->drawTrackingFeatures();
         
     }
     

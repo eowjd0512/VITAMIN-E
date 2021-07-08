@@ -15,8 +15,8 @@ Frame::Frame(const Frame &frame)
     :mpFeatureExtractor(frame.mpFeatureExtractor),
      mK(frame.mK.clone()), mDistCoef(frame.mDistCoef.clone()),
      N(frame.N), mvKeys(frame.mvKeys),
-     mvKeysUn(frame.mvKeysUn), //mvTrackedKeys(frame.mvTrackedKeys),
-     mDescriptors(frame.mDescriptors.clone()), //mtrackedKeyDescriptors(frame.mtrackedKeyDescriptors.clone()),
+     mvKeysUn(frame.mvKeysUn), mvTrackedKeys(frame.mvTrackedKeys), ORBKeys(frame.ORBKeys),
+     mBRIEFDescriptors(frame.mBRIEFDescriptors.clone()), //mtrackedKeyDescriptors(frame.mtrackedKeyDescriptors.clone()),
      kappa(frame.kappa),
      mvpMapPoints(frame.mvpMapPoints), mvbOutlier(frame.mvbOutlier), mnId(frame.mnId),
      img(frame.img.clone()), mbBad(false)
@@ -54,8 +54,8 @@ Frame::Frame(const cv::Mat &imGray, FeatureExtractor* extractor, cv::Mat &K, cv:
 
     UndistortKeyPoints();
     
-    mvpMapPoints = vector<MapPoint*>(N,static_cast<MapPoint*>(NULL));
-    mvbOutlier = vector<bool>(N,false);
+    //mvpMapPoints = vector<MapPoint*>(N,static_cast<MapPoint*>(NULL));
+    //mvbOutlier = vector<bool>(N,false);
 
     // This is done only for the first Frame (or after a change in the calibration)
     if(mbInitialComputations)
@@ -79,15 +79,31 @@ Frame::Frame(const cv::Mat &imGray, FeatureExtractor* extractor, cv::Mat &K, cv:
 
     AssignFeaturesToGrid();
 
-    
-
 }
+
+void Frame::insertTrackingFeature(const cv::Point pt){
+    mvTrackedKeys.push_back(pt);
+}
+
+size_t Frame::TrackingFeatureSize(){
+    return mvTrackedKeys.size();
+}
+
+void Frame::AddMapPoint(MapPoint *pMP, const size_t &idx)
+{
+    unique_lock<mutex> lock(mMutexFeatures);
+    mvpMapPoints[idx]=pMP;
+}
+
 
 void Frame::ExtractFeature(const cv::Mat &im)
 {
     //std::unique_lock<std::mutex> lock(mMutexFeatures);
     //std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
-    mpFeatureExtractor->detect(im, mvKeys, mDescriptors, kappa);
+    mpFeatureExtractor->detect(im, mvKeys, kappa);
+    //keypoints = ComputeKeyPointsOctTree(localPoints);
+    mpFeatureExtractor->detectFeatsForMotion(im, ORBKeys, mBRIEFDescriptors);
+
     //std::chrono::duration<double> sec = std::chrono::system_clock::now() - start;
     //std::cout << "Feature Extraction time : " << sec.count() << " seconds" << std::endl;
 

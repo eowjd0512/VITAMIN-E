@@ -17,10 +17,11 @@ class MapPoint;
 class Feature{
     
 public:
-    Feature(Point pt_, unsigned int id): pt(pt_), color(Scalar::all(-1)) 
+    Feature(std::pair<cv::Point, size_t> pt_, unsigned long int id): pt(pt_.first), color(Scalar::all(-1)) 
     {
         viewIdx.push_back(id);
-        pt_history[id] = pt;
+        pt_history[id] = pt_;
+        mapPoint = static_cast<MapPoint*>(NULL);
     }; //default constructor
 
 
@@ -30,8 +31,9 @@ public:
 
     Point pt;
     Scalar color;
-    map<unsigned int, cv::Point> pt_history;
-    vector<unsigned int> viewIdx;
+    map<unsigned long int, std::pair<cv::Point, size_t>> pt_history; //frame id, 2D projected point with its indx
+    vector<unsigned long int> viewIdx;
+  
 
     Mat descriptor;
     MapPoint* mapPoint;

@@ -81,8 +81,9 @@ cv::Mat FrameDrawer::DrawFrame()
         for(unsigned int i=0; i<tf.size(); i++)
         {
             if(tf[i]->pt_history.count(initialFrame_id)){
-                cv::line(im,tf[i]->pt_history[initialFrame_id],tf[i]->pt_history[currentFrame_id],
+                cv::line(im,tf[i]->pt_history[initialFrame_id].first, tf[i]->pt_history[currentFrame_id].first,
                         cv::Scalar(0,255,0));
+                cv::circle(im,tf[i]->pt_history[currentFrame_id].first,2,cv::Scalar(255,0,0),-1);
             }
             /* if(vMatches[i]>=0)
             {
@@ -173,7 +174,7 @@ void FrameDrawer::Update(Tracker *pTracker)
 {
     unique_lock<mutex> lock(mMutex);
     pTracker->mImGray.copyTo(mIm);
-    mvCurrentKeys=pTracker->mCurrentFrame.mvKeys;
+    mvCurrentKeys=pTracker->mCurrentFrame->mvKeys;
     N = mvCurrentKeys.size();
     mvbVO = vector<bool>(N,false);
     mvbMap = vector<bool>(N,false);
@@ -187,7 +188,7 @@ void FrameDrawer::Update(Tracker *pTracker)
 
         tf = pTracker->vitaFunc->tf;
 
-        currentFrame_id = pTracker->mCurrentFrame.mnId;
+        currentFrame_id = pTracker->mCurrentFrame->mnId;
         if(pTracker->mpInitializer)
             initialFrame_id = pTracker->mpInitializer->initialFrame_idx;
         else

@@ -12,6 +12,7 @@
 namespace VITAMINE{
 class MapPoint;
 class Frame;
+
 class Map{
     
 public:
@@ -20,12 +21,12 @@ public:
     ~Map(){}; //destructor 
     //TODO: smart pointer
 
-    void AddFrame(Frame pKF);
+    void AddFrame(Frame* pKF);
     void AddMapPoint(MapPoint* pMP);
 
     long unsigned int MapPointsInMap();
 
-    std::vector<Frame> GetAllFrames();
+    std::vector<Frame*> GetAllFrames();
     std::vector<MapPoint*> GetAllMapPoints();
 
     std::mutex mMutexMapUpdate;
@@ -35,7 +36,7 @@ private:
 
     long unsigned int mnMaxKFid;
     std::set<MapPoint*> mspMapPoints;   
-    std::vector<Frame> mspFrames;
+    std::vector<Frame*> mspFrames;
     std::mutex mMutexMap;
 };
 

@@ -86,14 +86,14 @@ void MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph)
     const float h = w*0.75;
     const float z = w*0.6;
 
-    const vector<Frame> vpKFs = mpMap->GetAllFrames();
+    const vector<Frame*> vpKFs = mpMap->GetAllFrames();
 
     if(bDrawKF)
     {
         for(size_t i=0; i<vpKFs.size(); i++)
         {
-            Frame pKF = vpKFs[i];
-            cv::Mat Twc = pKF.GetPoseInverse().t();
+            Frame* pKF = vpKFs[i];
+            cv::Mat Twc = pKF->GetPoseInverse().t();
 
             glPushMatrix();
 

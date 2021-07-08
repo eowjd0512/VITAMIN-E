@@ -24,6 +24,8 @@
 #include<opencv2/core/core.hpp>
 #include "Optimizer.h"
 #include<Eigen/Dense>
+#include"thirdParty/g2o/g2o/types/types_six_dof_expmap.h"
+#include"thirdParty/g2o/g2o/types/types_seven_dof_expmap.h"
 
 namespace VITAMINE
 {
@@ -33,11 +35,15 @@ class Converter
 public:
     static std::vector<cv::Mat> toDescriptorVector(const cv::Mat &Descriptors);
 
-    static SE3Quat toSE3Quat(const cv::Mat &cvT);
-    static SE3Quat toSE3Quat(const Sim3 &gSim3);
+    //static SE3Quat toSE3Quat(const cv::Mat &cvT);
+    //static SE3Quat toSE3Quat(const Sim3 &gSim3);
+    static g2o::SE3Quat toSE3Quat(const cv::Mat &cvT);
+    static g2o::SE3Quat toSE3Quat(const g2o::Sim3 &gSim3);
 
-    static cv::Mat toCvMat(SE3Quat &SE3);
-    static cv::Mat toCvMat(Sim3 &Sim3);
+    //static cv::Mat toCvMat(SE3Quat &SE3);
+    //static cv::Mat toCvMat(Sim3 &Sim3);
+    static cv::Mat toCvMat(g2o::SE3Quat &SE3);
+    static cv::Mat toCvMat(g2o::Sim3 &Sim3);
     static cv::Mat toCvMat(const Eigen::Matrix<double,4,4> &m);
     static cv::Mat toCvMat(const Eigen::Matrix3d &m);
     static cv::Mat toCvMat(const Eigen::Matrix<double,3,1> &m);

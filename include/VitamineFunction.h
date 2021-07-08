@@ -24,10 +24,12 @@ public:
 
     void AddMapPoint(MapPoint* pMP,const unsigned int pt_idx) noexcept;
 
+    std::vector<MapPoint*> getMapPoints();
+    std::vector<size_t> getFrameIds();
 
 
     //main Function
-    const void loadConsecutiveFrames(Frame* prevFrame, Frame* currentFrame);
+    const void loadConsecutiveFrames(Frame*prevFrame, Frame* currentFrame);
     
     //const void setPrevFrame(Frame* prevFrame)noexcept;
     const void getDominantMotion(const std::vector<DMatch>& good_matches);
@@ -36,6 +38,7 @@ public:
     double p_fn(const double x, const double sigma) const;
     double w_fn(const double x, const double sigma) const;
     void hill_climb(const Mat& kappa, vector<Point>& pt1, vector<Point2d> pt1_, double lmd);
+    void hill_climb_bk(const vector<Mat>& kappa, vector<Point>& pt1, vector<Point2d> pt1_, double lmd);
 
     //get tracked feature num of id-th frame
     int getTrackedFeatureNum(unsigned int frame_id) const noexcept;
@@ -45,6 +48,7 @@ public:
     const void drawTrackingFeatures();
  
 
+    size_t getPointIdx(unsigned long FrameId, size_t featureIdx);
     vector<Feature*> tf; 
 
 private:

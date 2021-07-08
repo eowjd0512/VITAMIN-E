@@ -30,32 +30,41 @@ public:
 class FeatureExtractor{
     
 public:
-    FeatureExtractor(int _nfeatures):nfeatures(_nfeatures){
-        extractor = BriefDescriptorExtractor::create();
-    }; //default constructor
+    FeatureExtractor();
     FeatureExtractor(const FeatureExtractor& rhs){}; //copy constructor
     ~FeatureExtractor(){}; //destructor 
     //TODO: smart pointer
 
     // Compute the features and descriptors on an image.
     // Mask is ignored in the current implementation.
-    void detect( const Mat& image, std::vector<KeyPoint>& keypoints, Mat& descriptors, Mat& kappa);
-    void detectORB(const Mat& image, const Mat& mask, 
-    vector<KeyPoint>& keypoints,
-    Mat& descriptors);
-
-    
+    void detect(const Mat& img, std::vector<KeyPoint>& keypoints, Mat & kappa);
+    void detectFeatsForMotion(const Mat& img, vector<KeyPoint>& keypoints, Mat& descriptors);
+    //std::vector<cv::Mat> mvImagePyramid;
     
 private:
+    std::vector<cv::Point> pattern;
+
     int nfeatures;
-    Mat curvature(Mat src);
-    Mat local_maxima(Mat img);
-    std::vector<cv::KeyPoint> ComputeKeyPointsOctTree(const Mat& localPoints);    
-    std::vector<cv::KeyPoint> DistributeOctTree(const std::vector<cv::KeyPoint>& vToDistributeKeys, const int &minX,
-                                           const int &maxX, const int &minY, const int &maxY, const int &N, const int &level);
+    double scaleFactor;
+    int nlevels;
+    int iniThFAST;
+    int minThFAST;
 
+    std::vector<int> mnFeaturesPerLevel;
 
-    Ptr<BriefDescriptorExtractor> extractor;
+    std::vector<int> umax;
+
+    std::vector<float> mvScaleFactor;
+    std::vector<float> mvInvScaleFactor;    
+    std::vector<float> mvLevelSigma2;
+    std::vector<float> mvInvLevelSigma2;
+
+    cv::Mat curvature(const cv::Mat& img);
+    cv::Mat local_maxima(const cv::Mat& img);
+    void ComputePyramid(const cv::Mat& img);
+    
+    //Ptr<BriefDescriptorExtractor> extractor;
+    Ptr<ORB> extractor;
 };
 
 }//namespace VITAMINE

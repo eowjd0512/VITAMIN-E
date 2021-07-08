@@ -20,6 +20,8 @@ class MapPoint;
 class Frame{
     
 public:
+    //using Ptr = std::unique_ptr<Frame>;
+
     Frame(){};
     // Constructor for Monocular cameras.
     Frame(const cv::Mat &imGray, FeatureExtractor* extractor,cv::Mat &K, cv::Mat &distCoef);
@@ -36,6 +38,12 @@ public:
 
     // Computes rotation, translation and camera center matrices from the camera pose.
     void UpdatePoseMatrices();
+
+    // MapPoint observation functions
+    void AddMapPoint(MapPoint* pMP, const size_t &idx);
+
+    void insertTrackingFeature(const cv::Point pt);
+    size_t TrackingFeatureSize();
 
     cv::Mat GetPose();
     cv::Mat GetPoseInverse();
@@ -60,17 +68,17 @@ public:
     int N;
 
     // Vector of keypoints (original for visualization) and undistorted (actually used by the system).
-    // In the stereo case, mvKeysUn is redundant as images must be rectified.
-    // In the RGB-D case, RGB images can be distorted.
     std::vector<KeyPoint> mvKeys;
     std::vector<KeyPoint> mvKeysUn;
-    std::vector<KeyPoint> mvTrackedKeys;
+    std::vector<Point> mvTrackedKeys;
 
+    //ORB key points for detecting motion
+    std::vector<KeyPoint> ORBKeys;
     // Brief descriptor, each row associated to a keypoint.
-    Mat mDescriptors, mtrackedKeyDescriptors;
+    Mat mBRIEFDescriptors;
 
-    //Curvature kappa
-    Mat kappa;
+    //Curvature kappa in an image pyramid
+    cv::Mat kappa;
 
     // MapPoints associated to keypoints, NULL pointer if no association.
     std::vector<MapPoint*> mvpMapPoints;

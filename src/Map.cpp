@@ -6,12 +6,12 @@ namespace VITAMINE
 Map::Map():mnMaxKFid(0){
 
 }
-void Map::AddFrame(Frame pKF)
+void Map::AddFrame(Frame* pKF)
 {
     unique_lock<mutex> lock(mMutexMap);
     mspFrames.push_back(pKF);
-    if(pKF.mnId>mnMaxKFid)
-        mnMaxKFid=pKF.mnId;
+    if(pKF->mnId>mnMaxKFid)
+        mnMaxKFid=pKF->mnId;
 }
 
 void Map::AddMapPoint(MapPoint *pMP)
@@ -26,7 +26,7 @@ long unsigned int Map::MapPointsInMap()
     return mspMapPoints.size();
 }
 
-std::vector<Frame> Map::GetAllFrames()
+std::vector<Frame*> Map::GetAllFrames()
 {
     std::unique_lock<std::mutex> lock(mMutexMap);
     return mspFrames;
