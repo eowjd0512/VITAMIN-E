@@ -29,7 +29,7 @@ This project was started to re-produce the paper
 [Done]
 - Architecture construction
 - Local extrema feature extraction and curvature tracking
-- Initialization
+- Initialization (only uses the essential matrix decomposition, not homography, so it doesn't well in a planar scene.)
 
 [TODO]
 - Implementation of Subspace Gauss-Newton Method
